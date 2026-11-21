@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bifocal Offline Check</title>
+    <style>
+      body { font: 16px system-ui; padding: 1rem; color-scheme: light dark; }
+      h1 { font-size: 1.25rem; }
+      button { font: inherit; padding: .45rem .7rem; }
+      details { margin-top: 1rem; }
+      pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+    </style>
+  </head>
+  <body>
+    <h1>Bifocal Offline Check</h1>
+    <button id="panel-button" type="button">Test side panel</button>
+    <details>
+      <summary>Offscreen developer test</summary>
+      <p>This test requires Chrome's <code>--offscreen-document-testing</code> switch.</p>
+      <button id="offscreen-button" type="button">Test offscreen</button>
+    </details>
+    <pre id="output" aria-live="polite"></pre>
+    <script type="module" src="panel.js"></script>
+  </body>
+</html>
