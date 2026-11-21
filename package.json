@@ -1,0 +1,17 @@
+{
+  "name": "bifocal",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "npm test --workspaces --if-present && node --test apps/extension/adapters/*.test.ts",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "devDependencies": {
+    "jsdom": "27.4.0",
+    "typescript": "6.0.3"
+  }
+}

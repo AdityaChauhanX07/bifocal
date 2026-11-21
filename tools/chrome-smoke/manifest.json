@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Bifocal Offline Check",
+  "version": "0.0.1",
+  "minimum_chrome_version": "148",
+  "permissions": ["offscreen", "sidePanel"],
+  "action": {
+    "default_title": "Open Bifocal Offline Check"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "side_panel": {
+    "default_path": "panel.html"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'none';"
+  }
+}
