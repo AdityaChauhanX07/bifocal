@@ -1,0 +1,154 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function hasVerifiedEmail() {
+      return signedIn()
+        && request.auth.token.get('email_verified', false) == true
+        && request.auth.token.get('email', null) is string;
+    }
+
+    function isOwner(circle) {
+      return signedIn() && circle.protectedUid == request.auth.uid;
+    }
+
+    function isContact(circle) {
+      return signedIn() && circle.contactUid == request.auth.uid;
+    }
+
+    function isMember(circle) {
+      return isOwner(circle) || isContact(circle);
+    }
+
+    function hasPendingInvite(circle) {
+      return hasVerifiedEmail()
+        && circle.contactUid == null
+        && circle.contactEmail == request.auth.token.email.lower();
+    }
+
+    function normalizedInviteEmail(email) {
+      return email is string
+        && email.size() <= 254
+        && email == email.lower()
+        && email.matches('[^@\\s]+@[^@\\s]+[.][^@\\s]+')
+        && (!hasVerifiedEmail() || email != request.auth.token.email.lower());
+    }
+
+    function boundedText(value, maxLength) {
+      return value is string && value.size() > 0 && value.size() <= maxLength;
+    }
+
+    function shortNote(value) {
+      return boundedText(value, 280)
+        && value.matches('(?s).*\\S.*')
+        && !value.matches('(?is).*(http|www[.]|ftp:|mailto:|[\\p{L}\\p{N}][\\p{L}\\p{N}.-]*[.][\\p{L}]{2,}|[0-9]{1,3}([.][0-9]{1,3}){3}).*');
+    }
+
+    function profileCircleMatches(circleId, role) {
+      let circle = getAfter(/databases/$(database)/documents/circles/$(circleId)).data;
+      return (role == 'protected' && isOwner(circle))
+        || (role == 'contact' && isContact(circle));
+    }
+
+    function validProfile(profile) {
+      let circleId = profile.get('circleId', null);
+      let fcmToken = profile.get('fcmToken', null);
+      return profile.keys().hasAll(['displayName', 'role', 'createdAt'])
+        && profile.keys().hasOnly(['displayName', 'role', 'createdAt', 'circleId', 'fcmToken'])
+        && boundedText(profile.displayName, 100)
+        && profile.role in ['protected', 'contact']
+        && (fcmToken == null || boundedText(fcmToken, 4096))
+        && (circleId == null
+          || (boundedText(circleId, 128) && profileCircleMatches(circleId, profile.role)));
+    }
+
+    function validTactics(tactics, tier) {
+      return tactics is list
+        && tactics.size() <= 14
+        && (tier == 'none' ? tactics.size() == 0 : tactics.size() > 0)
+        && tactics.hasOnly([
+          'urgency', 'threat_or_fear', 'gift_card_payment', 'crypto_or_wire_payment',
+          'remote_access', 'credential_request', 'impersonates_bank', 'impersonates_government',
+          'impersonates_tech_support', 'impersonates_family', 'prize_or_refund', 'romance',
+          'mismatched_link', 'asks_for_secrecy'
+        ]);
+    }
+
+    function validRequest(helpRequest) {
+      let fields = ['tier', 'tactics', 'summary', 'channel', 'createdAt', 'status'];
+      return helpRequest.keys().hasAll(fields)
+        && helpRequest.keys().hasOnly(fields)
+        && helpRequest.tier in ['none', 'suspicious', 'high']
+        && validTactics(helpRequest.tactics, helpRequest.tier)
+        && shortNote(helpRequest.summary)
+        && helpRequest.channel in ['email', 'sms', 'web']
+        && helpRequest.createdAt == request.time
+        && helpRequest.status == 'pending';
+    }
+
+    function validReply() {
+      let updated = request.resource.data;
+      let preset = updated.get('replyPreset', null);
+      let note = updated.get('replyNote', null);
+      return resource.data.status == 'pending'
+        && updated.status == 'replied'
+        && updated.repliedAt == request.time
+        && updated.diff(resource.data).affectedKeys()
+          .hasOnly(['status', 'replyPreset', 'replyNote', 'repliedAt'])
+        && (preset == null || preset in ['call_me', 'looks_fine', 'call_bank'])
+        && (note == null || shortNote(note))
+        && (preset != null || note != null);
+    }
+
+    match /users/{uid} {
+      allow get: if signedIn() && uid == request.auth.uid;
+      allow create: if signedIn() && uid == request.auth.uid
+        && validProfile(request.resource.data) && request.resource.data.createdAt == request.time;
+      allow update: if signedIn() && uid == request.auth.uid
+        && validProfile(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    match /circles/{circleId} {
+      allow get: if (signedIn() && circleId == request.auth.uid)
+        || isContact(resource.data) || hasPendingInvite(resource.data);
+      allow list: if isMember(resource.data) || hasPendingInvite(resource.data);
+
+      allow create: if signedIn() && circleId == request.auth.uid
+        && request.resource.data.keys().hasOnly(['protectedUid', 'contactEmail', 'contactUid', 'createdAt'])
+        && request.resource.data.protectedUid == request.auth.uid
+        && request.resource.data.contactUid == null
+        && normalizedInviteEmail(request.resource.data.contactEmail)
+        && request.resource.data.createdAt == request.time;
+
+      // A pending typo can be corrected. A linked circle keeps its original recipient.
+      allow update: if (
+        isOwner(resource.data) && resource.data.contactUid == null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['contactEmail'])
+        && normalizedInviteEmail(request.resource.data.contactEmail)
+      ) || (
+        hasPendingInvite(resource.data) && !isOwner(resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['contactUid'])
+        && request.resource.data.contactUid == request.auth.uid
+      );
+
+      match /requests/{requestId} {
+        function circle() {
+          return get(/databases/$(database)/documents/circles/$(circleId)).data;
+        }
+
+        function canAskForHelp() {
+          let parent = circle();
+          return isOwner(parent) && parent.contactUid is string;
+        }
+
+        allow get, list: if isMember(circle());
+        allow create: if canAskForHelp() && validRequest(request.resource.data);
+        allow update: if isContact(circle()) && validReply();
+      }
+    }
+  }
+}
