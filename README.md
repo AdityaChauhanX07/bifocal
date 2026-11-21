@@ -7,3 +7,5 @@ Bifocal helps older adults spot scam warning signs in messages and pause before 
 Run `npm ci`, `npm test`, and `npm run typecheck` with Node.js 22.18 or later.
 
 Use `screenSchema` from `@bifocal/core` as the Firebase response schema and `systemPrompt` as the system instruction. Pass the model's JSON and the exact text it screened to `parseScreening`. If parsing returns `null`, discard that model response. Use `nextSteps` to display the action the model selected.
+
+Use `redactText` with the extracted sender address and any known profile or trusted-contact details. Use the returned text as the consent preview and pass that same text to cloud screening after approval. The redaction rules cover common US address and number formats.
