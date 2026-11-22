@@ -1,4 +1,4 @@
-import { tacticDescriptions } from "@bifocal/core";
+import { deviceModelReady, tacticDescriptions } from "@bifocal/core";
 import type { ContactRequest, RequestChannel, Screening } from "@bifocal/core";
 import { getGenerativeModel, InferenceMode, InferenceSource } from "firebase/ai";
 import type { AI } from "firebase/ai";
@@ -33,6 +33,7 @@ export async function prepareRequest(
   if (!ai || fallback.tactics.length < 2 || !message.trim()) return fallback;
 
   try {
+    if (!await deviceModelReady()) return fallback;
     const model = getGenerativeModel(ai, {
       mode: InferenceMode.ONLY_ON_DEVICE,
       onDeviceParams: {
