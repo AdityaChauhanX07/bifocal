@@ -9,12 +9,7 @@
   },
   "emulators": {
     "auth": { "port": 9099 },
-    "hosting": {
-    "public": "apps/web/dist",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-    "rewrites": [{ "source": "/try{,/**}", "destination": "/index.html" }]
-  },
-  "firestore": { "port": 8080 }
+    "firestore": { "port": 8080 }
   },
   "functions": {
     "source": "functions",
