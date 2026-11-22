@@ -22,8 +22,13 @@ export default defineContentScript({
     const onSettings = (changes: Record<string, chrome.storage.StorageChange>, area: string) => {
       if (area === "local" && pageSettingsKey in changes) update(changes[pageSettingsKey].newValue);
     };
-    const onMessage = (message: ExtensionMessage) => {
+    const onMessage = (message: ExtensionMessage, _sender: chrome.runtime.MessageSender, reply: (ready: boolean) => void) => {
       if (message.type === "page-checks-disabled") { enabled = false; refresh(); }
+      if (message.type === "check-page") {
+        enabled = true;
+        refresh();
+        reply(true);
+      }
     };
     chrome.storage.onChanged.addListener(onSettings);
     chrome.runtime.onMessage.addListener(onMessage);

@@ -25,6 +25,7 @@ export type ExtensionMessage =
   | { type: "show-card"; contact?: boolean }
   | { type: "check-notice"; notice: CheckNotice | null }
   | { type: "flagged-link"; href: string }
+  | { type: "check-page" }
   | { type: "page-checks-disabled" }
   | { type: "pause-choice"; choice: "back" | "contact" | "continue" }
   | { type: "private-result"; tabId: number; cardId: string; result: ScreeningResult }

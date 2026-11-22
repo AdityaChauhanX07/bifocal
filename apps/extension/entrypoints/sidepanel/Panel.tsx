@@ -121,7 +121,7 @@ export function Panel() {
           }}>Sign out</button></>
         ) : <button type="button" disabled={!online} onClick={() => void useGoogle()}>Sign in with Google</button>}
       </section>}
-      <Setup onModelReady={() => setModelReady((version) => version + 1)} />
+      <Setup tabId={tabId} onModelReady={() => setModelReady((version) => version + 1)} />
     </main>
   );
 }
