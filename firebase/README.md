@@ -4,7 +4,7 @@ The protected user's Firebase UID doubles as the circle ID. Create `circles/{pro
 
 After Google sign-in, find pending invites with both `where("contactEmail", "==", user.email.toLowerCase())` and `where("contactUid", "==", null)`. Set `contactUid` to the signed-in user's UID. The rules check the verified email in their Firebase Auth token. Query `where("contactUid", "==", user.uid)` to find circles the contact already joined.
 
-Each user can read and write their own `users/{uid}` profile. The required fields are `displayName`, `role` (`protected` or `contact`), and `createdAt: serverTimestamp()`. Set `circleId` after joining or in the same write batch. The optional `fcmToken` stays private to the user and the backend. Access to requests comes from circle membership.
+Each user can read and write their own `users/{uid}` profile. The required fields are `displayName`, `role` (`protected` or `contact`), and `createdAt: serverTimestamp()`. Set `circleId` after joining or in the same write batch. The optional `fcmInstallationId` targets web push on the latest device enabled for that user. The installation ID and legacy `fcmToken` stay private to the user and the backend. Access to requests comes from circle membership.
 
 Under `circles/{circleId}/requests/{requestId}`, the owner creates a request after the contact joins. Include `tier`, `tactics`, `summary`, `channel` (`email`, `sms`, or `web`), `createdAt: serverTimestamp()`, and `status: "pending"`. Preview the locally redacted summary before sending it. The rules cap the summary at 280 characters and reject common link formats.
 
