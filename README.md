@@ -11,7 +11,7 @@ Bifocal helps older adults spot scam warning signs in messages and pause before 
 | Recheck a redacted message after approval | `ONLY_IN_CLOUD`. Send the exact preview the user approved. | [Approval handler](https://github.com/AdityaChauhanX07/bifocal/blob/4cff8f61933524e82fff0d9473a927eaa441eaff/apps/web/src/try/TryPage.tsx#L77) · [Web screening](https://github.com/AdityaChauhanX07/bifocal/blob/4cff8f61933524e82fff0d9473a927eaa441eaff/apps/web/src/screening-model.ts#L98) |
 | Lead with the clearest warning in a trusted-contact request | `ONLY_ON_DEVICE`. The model can select a warning code, which Bifocal turns into a prewritten sentence. | [Contact summary](https://github.com/AdityaChauhanX07/bifocal/blob/4cff8f61933524e82fff0d9473a927eaa441eaff/apps/extension/trusted-contact/summary.ts#L55) |
 
-The web result shows whether it used on-device AI, cloud AI, or the basic check. The separate Chrome side-panel smoke test returned a valid on-device result while offline. [Smoke test setup and result](tools/chrome-smoke/README.md)
+The result shows whether it used on-device AI, cloud AI, or the basic check. Install the Chrome extension for Gmail, Google Messages and Pause. The separate Chrome side-panel smoke test returned a valid on-device result while offline. [Extension setup](apps/extension/README.md) · [Offline smoke test](tools/chrome-smoke/README.md)
 
 ## Try Bifocal locally
 
