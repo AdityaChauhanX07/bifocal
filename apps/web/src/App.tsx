@@ -234,6 +234,7 @@ export function App({ firebase }: { firebase: { auth: Auth; db: Firestore } | nu
         <div className="page-width wordmark">
           <span className="lenses" aria-hidden="true" />
           Bifocal
+          <a href="/try" className="meta underline">Try Bifocal</a>
           <InstallButton />
         </div>
       </header>

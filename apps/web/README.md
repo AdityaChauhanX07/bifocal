@@ -45,3 +45,16 @@ The installed dashboard shows a reconnect screen when opened offline. It caches 
 5. Put the dashboard in the background and send a new help request from the protected user's account. Tap the phone alert to open the dashboard.
 
 The account receives push on the most recently registered device. **Turn off notifications** and **Sign out** remove this device's registration if it's still the active one. Open dashboards also announce new requests in the page, including in local emulator sessions.
+
+## Try Bifocal
+
+Open `/try` in the dev server or the deployed site. Choose one of eight fictional examples and press **Check sample**, or use **Paste a message** and **Check privately**. Local development uses Gemini Nano when Chrome has it available and a basic check otherwise. The result names the method it used.
+
+The `packages/core` screening router takes a fixed sample ID for hybrid checks. Private text uses on-device inference and local rules. The cloud call takes the exact redacted preview only after **Send this text**. The extension can use those same private and consented routes with its own Firebase model adapter.
+
+### Enable hosted cloud checks
+
+1. In Firebase, open **Authentication** → **Sign-in method**, select **Anonymous**, turn on **Enable**, and save. The judge page opens a separate, anonymous session when a cloud-capable sample is checked. Trusted-contact sign-in keeps its own session.
+2. Register the dashboard web app with **App Check** using reCAPTCHA Enterprise. Fill in `VITE_FIREBASE_APP_CHECK_SITE_KEY` and the Firebase web app configuration in `.env.local`. The sample cloud checks are available in the production build with this setup.
+3. Pasted text defaults to private checks. After confirming that this Firebase project’s Gemini calls are covered by the paid-service data terms, set `VITE_BIFOCAL_ENABLE_PASTED_CLOUD=true` to offer the separately approved redacted check.
+4. Build and preview the site. Deploy the build with `npx firebase-tools@15.37.0 deploy --project hackathon --only hosting` when it is ready for judges. The Hosting configuration serves the page on a direct visit to `/try`.
