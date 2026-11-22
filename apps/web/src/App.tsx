@@ -4,10 +4,13 @@ import { FirebaseError } from "firebase/app";
 import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
 import type { Auth, User } from "firebase/auth";
 import type { Firestore } from "firebase/firestore";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { sendReply, watchInbox } from "./requests";
 import type { HelpRequest, Inbox, Reply } from "./requests";
+import { newRequestCount, pendingPaths } from "./new-requests";
+import { disablePush } from "./push";
+import { PushNotifications } from "./PushNotifications";
 
 const dateTime = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
 
@@ -99,16 +102,28 @@ function RequestCard({ request }: { request: HelpRequest }) {
   );
 }
 
-function RequestList({ db, user }: { db: Firestore; user: User }) {
+function RequestList({
+  db, user, authBusy, onPushBusy,
+}: { db: Firestore; user: User; authBusy: boolean; onPushBusy: (busy: boolean) => void }) {
   const [inbox, setInbox] = useState<Inbox>({ loading: true, circleCount: 0, requests: [] });
   const [attempt, setAttempt] = useState(0);
   const [failed, setFailed] = useState(false);
+  const seenPending = useRef<Set<string> | null>(null);
+  const [arrivals, setArrivals] = useState(0);
 
   useEffect(() => {
     let active = true;
     const stop = watchInbox(
       db, user,
-      (current) => { if (active) setInbox(current); },
+      (current) => {
+        if (!active) return;
+        setInbox(current);
+        if (current.loading) return;
+        const next = pendingPaths(current);
+        const count = seenPending.current ? newRequestCount(seenPending.current, next) : 0;
+        seenPending.current = next;
+        if (count) setArrivals((total) => total + count);
+      },
       () => { if (active) setFailed(true); },
     );
     return () => {
@@ -118,6 +133,8 @@ function RequestList({ db, user }: { db: Firestore; user: User }) {
   }, [db, user, attempt]);
 
   function reconnect() {
+    seenPending.current = null;
+    setArrivals(0);
     setInbox({ loading: true, circleCount: 0, requests: [] });
     setFailed(false);
     setAttempt((count) => count + 1);
@@ -142,6 +159,15 @@ function RequestList({ db, user }: { db: Firestore; user: User }) {
           </p>
         </section>
       )}
+      {inbox.circleCount > 0 && user.emailVerified && (
+        <PushNotifications db={db} user={user} disabled={authBusy} onBusyChange={onPushBusy} />
+      )}
+      {arrivals > 0 && (
+        <div className="account notice">
+          <p role="status">{arrivals === 1 ? "A new help request arrived." : `${arrivals} new help requests arrived.`}</p>
+          <button className="secondary" onClick={() => setArrivals(0)}>Dismiss</button>
+        </div>
+      )}
       {inbox.requests.map((request) => <RequestCard key={request.ref.path} request={request} />)}
     </>
   );
@@ -150,6 +176,7 @@ function RequestList({ db, user }: { db: Firestore; user: User }) {
 function Dashboard({ auth, db }: { auth: Auth; db: Firestore }) {
   const [user, setUser] = useState<User | null>();
   const [busy, setBusy] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => onAuthStateChanged(auth, setUser), [auth]);
@@ -158,8 +185,12 @@ function Dashboard({ auth, db }: { auth: Auth; db: Firestore }) {
     setBusy(true);
     setError("");
     try {
-      if (user) await signOut(auth);
-      else await signInWithPopup(auth, new GoogleAuthProvider());
+      if (user) {
+        await disablePush(db, user.uid);
+        await signOut(auth);
+      } else {
+        await signInWithPopup(auth, new GoogleAuthProvider());
+      }
     } catch (err) {
       if (!(err instanceof FirebaseError) || err.code !== "auth/popup-closed-by-user") {
         setError(user ? "Bifocal couldn’t sign you out. Try again." : "Google sign-in didn’t finish. Try again.");
@@ -177,10 +208,10 @@ function Dashboard({ auth, db }: { auth: Auth; db: Firestore }) {
         <>
           <div className="account">
             <p className="meta">Signed in as <strong>{user.email}</strong></p>
-            <button className="secondary" onClick={changeSignIn} disabled={busy}>Sign out</button>
+            <button className="secondary" onClick={changeSignIn} disabled={busy || pushBusy}>Sign out</button>
           </div>
           {error && <p role="alert" className="error">{error}</p>}
-          <RequestList key={user.uid} db={db} user={user} />
+          <RequestList key={user.uid} db={db} user={user} authBusy={busy} onPushBusy={setPushBusy} />
         </>
       ) : (
         <section className="empty-state grid gap-4">
