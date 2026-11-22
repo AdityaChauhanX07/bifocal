@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { pageCheckScript, pageOrigins, registerPageChecks } from "../../lib/page-checks";
+import { checkWebsiteTab, pageCheckScript, pageOrigins, registerPageChecks } from "../../lib/page-checks";
 
 type PromptApi = {
   availability(): Promise<string>;
@@ -8,18 +8,33 @@ type PromptApi = {
 
 const promptApi = (globalThis as typeof globalThis & { LanguageModel?: PromptApi }).LanguageModel;
 
-export function Setup({ onModelReady }: { onModelReady: () => void }) {
+const pageMessages = {
+  ready: "Website checks are active on this tab.",
+  "choose-tab": "Open the website you want to check in a Chrome tab, then choose Check this tab.",
+  "access-needed": "Chrome hasn’t granted access to this tab. Open a regular website or check Bifocal’s site access in Chrome’s Extensions menu.",
+  unavailable: "Bifocal couldn’t start the check. Refresh the website tab and try again.",
+};
+
+export function Setup({ tabId, onModelReady }: { tabId?: number; onModelReady: () => void }) {
   const [model, setModel] = useState<string>();
   const [progress, setProgress] = useState<number>();
   const [pageChecks, setPageChecks] = useState(false);
   const [pagesBusy, setPagesBusy] = useState(false);
-  const [pageStatus, setPageStatus] = useState("");
+  const [pageStatus, setPageStatus] = useState<{ tabId?: number; text: string }>();
 
   useEffect(() => {
     void promptApi?.availability().then(setModel, () => setModel("unavailable"));
     void chrome.scripting.getRegisteredContentScripts({ ids: [pageCheckScript] })
       .then((scripts) => setPageChecks(scripts.length > 0));
   }, []);
+
+  useEffect(() => {
+    function clearOnNavigation(id: number, change: chrome.tabs.OnUpdatedInfo) {
+      if (id === tabId && change.status === "loading") setPageStatus(undefined);
+    }
+    chrome.tabs.onUpdated.addListener(clearOnNavigation);
+    return () => chrome.tabs.onUpdated.removeListener(clearOnNavigation);
+  }, [tabId]);
 
   async function download() {
     if (!promptApi) return;
@@ -44,7 +59,7 @@ export function Setup({ onModelReady }: { onModelReady: () => void }) {
 
   async function togglePages() {
     setPagesBusy(true);
-    setPageStatus("");
+    setPageStatus(undefined);
     try {
       if (pageChecks) {
         await chrome.permissions.remove({ origins: pageOrigins });
@@ -57,10 +72,21 @@ export function Setup({ onModelReady }: { onModelReady: () => void }) {
           throw error;
         }
         setPageChecks(true);
-        setPageStatus("Reload your current page to start using Pause there.");
+        setPageStatus({ tabId, text: pageMessages[await checkWebsiteTab(tabId)] });
       }
     } catch {
-      setPageStatus("Couldn’t change page checks. Try again.");
+      setPageStatus({ tabId, text: "Couldn’t change page checks. Try again." });
+    } finally {
+      setPagesBusy(false);
+    }
+  }
+
+  async function checkTab() {
+    setPagesBusy(true);
+    try {
+      setPageStatus({ tabId, text: pageMessages[await checkWebsiteTab(tabId)] });
+    } catch {
+      setPageStatus({ tabId, text: pageMessages.unavailable });
     } finally {
       setPagesBusy(false);
     }
@@ -82,10 +108,13 @@ export function Setup({ onModelReady }: { onModelReady: () => void }) {
       )}
       <h2>Pause on websites</h2>
       <p>Allow site access to check pages with payment, sign-in, or download signals and pause at risky actions.</p>
-      <button type="button" disabled={pagesBusy} onClick={() => void togglePages()}>
-        {pageChecks ? "Turn off website checks" : "Enable website checks"}
-      </button>
-      {pageStatus && <p role="status">{pageStatus}</p>}
+      <div className="buttons">
+        {pageChecks && <button type="button" disabled={pagesBusy} onClick={() => void checkTab()}>Check this tab</button>}
+        <button type="button" disabled={pagesBusy} onClick={() => void togglePages()}>
+          {pageChecks ? "Turn off website checks" : "Enable website checks"}
+        </button>
+      </div>
+      {pageStatus && pageStatus.tabId === tabId && <p role="status">{pageStatus.text}</p>}
     </details>
   );
 }
