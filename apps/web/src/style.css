@@ -50,3 +50,16 @@ details { margin-top: .75rem; }
 summary { color: #14546d; cursor: pointer; min-height: 2.75rem; padding-block: .45rem; width: fit-content; }
 textarea { width: 100%; border: 1px solid #8195a8; border-radius: .5rem; padding: .6rem .75rem; resize: vertical; }
 .error { color: #852e20; margin-top: .55rem; }
+
+.try-width { width: min(100% - 2rem, 60rem); }
+.try-title { margin-bottom: .6rem; }
+.try-workbench { display: grid; grid-template-columns: minmax(14rem, 1fr) minmax(0, 2.2fr); gap: 1rem; align-items: start; margin-top: 1.5rem; }
+.try-sample { width: 100%; text-align: left; }
+.try-sample:hover:not(:disabled), .try-sample[aria-pressed="true"] { background: #e8f1f6; }
+.try-sample[aria-pressed="true"] { border-color: #88a9ba; }
+.try-message, .try-quote { margin: 0; background: #edf3f7; border-radius: .55rem; padding: .85rem 1rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+.try-quote { border-inline-start: .25rem solid #14546d; }
+@media (max-width: 42rem) {
+  .try-workbench { grid-template-columns: 1fr; }
+  .try-choices { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

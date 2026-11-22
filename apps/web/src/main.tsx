@@ -4,4 +4,12 @@ import { connectFirebase } from "./firebase";
 import "./style.css";
 
 const root = document.getElementById("root");
-if (root) createRoot(root).render(<App firebase={connectFirebase()} />);
+if (root) {
+  const app = createRoot(root);
+  if (location.pathname === "/try" || location.pathname === "/try/") {
+    document.title = "Check a message | Bifocal";
+    void import("./try/TryPage").then(({ TryPage }) => app.render(<TryPage />));
+  } else {
+    app.render(<App firebase={connectFirebase()} />);
+  }
+}
