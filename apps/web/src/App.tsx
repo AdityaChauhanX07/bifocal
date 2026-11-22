@@ -11,6 +11,7 @@ import type { HelpRequest, Inbox, Reply } from "./requests";
 import { newRequestCount, pendingPaths } from "./new-requests";
 import { disablePush } from "./push";
 import { PushNotifications } from "./PushNotifications";
+import { InstallButton } from "./InstallButton";
 
 const dateTime = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
 
@@ -230,7 +231,11 @@ export function App({ firebase }: { firebase: { auth: Auth; db: Firestore } | nu
   return (
     <>
       <header className="site-header">
-        <div className="page-width wordmark"><span className="lenses" aria-hidden="true" />Bifocal</div>
+        <div className="page-width wordmark">
+          <span className="lenses" aria-hidden="true" />
+          Bifocal
+          <InstallButton />
+        </div>
       </header>
       <main className="page-width">
         <h1>Help requests</h1>

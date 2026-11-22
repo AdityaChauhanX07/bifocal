@@ -25,11 +25,22 @@ Copy `.env.example` to `.env.local` in this directory and fill in the Firebase w
 
 Run `npm run build -w @bifocal/web` from the repository root. The static build is in `apps/web/dist` and requires the project's Firestore rules. Production builds use the supplied Firebase config. The dev server uses the local emulators by default.
 
+## Install on a phone
+
+Open the production dashboard URL over HTTPS.
+
+- **Android, Chrome.** Tap **Install Bifocal** if it appears in the dashboard and approve the browser prompt. You can also open Chrome’s three-dot menu, choose **Add to home screen**, and tap **Install**.
+- **iPhone or iPad, Safari.** Open **Share** and choose **Add to Home Screen**. Turn on **Open as Web App** if Safari shows that option, then tap **Add**.
+
+Open **Bifocal** from the home screen and sign in with the invited Google account. For alerts, enable notifications from that installed window after the Web Push setup below.
+
+The installed dashboard shows a reconnect screen when opened offline. It caches that screen locally. Help requests, replies, and sign-in continue to use the network.
+
 ## Web push setup
 
 1. In Firebase **Project settings**, open **Cloud Messaging**. Under **Web configuration** → **Web Push certificates**, generate a key pair if the project does not have one.
 2. Set `VITE_FIREBASE_VAPID_KEY` in `.env.local` to the public key shown in the console. Set `VITE_FIREBASE_MESSAGING_SENDER_ID` to the `messagingSenderId` from the web app's SDK configuration. Make sure the project has the FCM Registration API enabled.
-3. Rebuild and serve the dashboard over HTTPS. Keep `firebase-messaging-sw.js` at the root of the served site alongside the dashboard. Deploy the notification trigger using the [function instructions](../../functions/README.md#trusted-contact-notifications).
+3. Rebuild and serve the dashboard over HTTPS. Serve the full build so `dashboard-sw.js` and `firebase-messaging-sw.js` are both available from the site root. Deploy the notification trigger using the [function instructions](../../functions/README.md#trusted-contact-notifications).
 4. On the receiving device, open the dashboard, sign in with the invited Google account, and let it link the circle. Tap **Allow notifications**, then **Allow** in the browser prompt. On iPhone or iPad, add the dashboard to the Home Screen and open it there before enabling notifications.
 5. Put the dashboard in the background and send a new help request from the protected user's account. Tap the phone alert to open the dashboard.
 
