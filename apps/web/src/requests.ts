@@ -1,4 +1,4 @@
-import type { Tactic, Tier } from "@bifocal/core";
+import type { ContactReply, ContactRequest, ReplyPreset } from "@bifocal/core";
 import { FirebaseError } from "firebase/app";
 import type { User } from "firebase/auth";
 import {
@@ -7,24 +7,11 @@ import {
 } from "firebase/firestore";
 import type { DocumentReference, Firestore, Timestamp, Unsubscribe } from "firebase/firestore";
 
-export const replies = {
-  call_me: "Don’t respond. I’ll call you.",
-  looks_fine: "This one looks fine.",
-  call_bank: "Call the bank directly.",
-} as const;
-
-export type ReplyPreset = keyof typeof replies;
 export type Reply = { replyPreset: ReplyPreset } | { replyNote: string };
 
-interface RequestFields {
-  tier: Tier;
-  tactics: Tactic[];
-  summary: string;
-  channel: "email" | "sms" | "web";
+interface RequestFields extends ContactRequest, ContactReply {
   createdAt: Timestamp;
   status: "pending" | "replied";
-  replyPreset?: ReplyPreset;
-  replyNote?: string;
   repliedAt?: Timestamp;
 }
 

@@ -1,21 +1,14 @@
-import { tacticDescriptions } from "@bifocal/core";
-import type { Tier } from "@bifocal/core";
+import { replyPresets, requestChannels, riskLabels, tacticDescriptions } from "@bifocal/core";
+import type { ReplyPreset } from "@bifocal/core";
 import { FirebaseError } from "firebase/app";
 import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
 import type { Auth, User } from "firebase/auth";
 import type { Firestore } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import { replies, sendReply, watchInbox } from "./requests";
-import type { HelpRequest, Inbox, Reply, ReplyPreset } from "./requests";
+import { sendReply, watchInbox } from "./requests";
+import type { HelpRequest, Inbox, Reply } from "./requests";
 
-const riskLabels: Record<Tier, string> = {
-  none: "No obvious warning signs",
-  suspicious: "Suspicious",
-  high: "High risk",
-};
-
-const channels = { email: "Email", sms: "Text message", web: "Web page" };
 const dateTime = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
 
 function RequestCard({ request }: { request: HelpRequest }) {
@@ -45,7 +38,7 @@ function RequestCard({ request }: { request: HelpRequest }) {
     <article className="request-card">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <span className="risk" data-tier={request.tier}>{riskLabels[request.tier]}</span>
-        <span className="meta">{channels[request.channel]}</span>
+        <span className="meta">{requestChannels[request.channel]}</span>
         <time className="meta" dateTime={request.createdAt.toDate().toISOString()}>
           {dateTime.format(request.createdAt.toDate())}
         </time>
@@ -62,14 +55,14 @@ function RequestCard({ request }: { request: HelpRequest }) {
       {request.status === "replied" ? (
         <div className="sent" role="status">
           <h3>Reply sent</h3>
-          {request.replyPreset && <p>{replies[request.replyPreset]}</p>}
+          {request.replyPreset && <p>{replyPresets[request.replyPreset]}</p>}
           {request.replyNote && <p>{request.replyNote}</p>}
         </div>
       ) : (
         <div className="reply">
           <h3>Send a reply</h3>
           <div className="flex flex-wrap gap-2">
-            {(Object.keys(replies) as ReplyPreset[]).map((preset) => (
+            {(Object.keys(replyPresets) as ReplyPreset[]).map((preset) => (
               <button
                 className={preset === "call_me" ? "primary" : "secondary"}
                 type="button"
@@ -77,7 +70,7 @@ function RequestCard({ request }: { request: HelpRequest }) {
                 onClick={() => void reply({ replyPreset: preset })}
                 disabled={sending}
               >
-                {replies[preset]}
+                {replyPresets[preset]}
               </button>
             ))}
           </div>

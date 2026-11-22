@@ -3,3 +3,5 @@ export { nextSteps, parseScreening, screenSchema, tacticDescriptions } from "./s
 export type { NextStep, Screening, Tactic, Tier } from "./screening.ts";
 export { redactText } from "./redaction.ts";
 export type { RedactionOptions } from "./redaction.ts";
+export { replyPresets, requestChannels, riskLabels } from "./contact.ts";
+export type { ContactReply, ContactRequest, ReplyPreset, RequestChannel } from "./contact.ts";

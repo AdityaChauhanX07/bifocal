@@ -7,8 +7,9 @@
     "packages/*"
   ],
   "scripts": {
-    "test": "npm test --workspaces --if-present && node --test apps/extension/adapters/*.test.ts",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "test": "npm test --workspaces --if-present && node --test apps/extension/adapters/*.test.ts apps/extension/trusted-contact/*.test.ts",
+    "test:trusted-contact": "node --test apps/extension/trusted-contact/firestore.emulator.ts",
+    "typecheck": "npm run typecheck --workspaces --if-present && tsc -p apps/extension/trusted-contact"
   },
   "devDependencies": {
     "jsdom": "27.4.0",
