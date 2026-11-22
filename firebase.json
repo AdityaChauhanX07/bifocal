@@ -2,7 +2,10 @@
   "hosting": {
     "public": "apps/web/dist",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-    "rewrites": [{ "source": "/try{,/**}", "destination": "/index.html" }]
+    "rewrites": [
+      { "source": "/try{,/**}", "destination": "/index.html" },
+      { "source": "/eval{,/**}", "destination": "/index.html" }
+    ]
   },
   "firestore": {
     "rules": "firebase/firestore.rules"

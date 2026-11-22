@@ -89,7 +89,10 @@ export function TryPage() {
         <div className="page-width try-width wordmark">
           <span className="lenses" aria-hidden="true" />
           Bifocal
-          <a className="meta ml-auto underline" href="/">Trusted-contact dashboard</a>
+          <nav className="ml-auto flex flex-wrap gap-3" aria-label="Bifocal pages">
+            <a className="meta underline" href="/eval">Evaluation</a>
+            <a className="meta underline" href="/">Dashboard</a>
+          </nav>
         </div>
       </header>
       <main className="page-width try-width">

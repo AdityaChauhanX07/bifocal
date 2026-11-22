@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
@@ -7,6 +9,19 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    {
+      name: "bifocal-eval-dataset",
+      resolveId(id) {
+        if (id === "virtual:bifocal-eval-dataset") return "\0" + id;
+      },
+      load(id) {
+        if (id !== "\0virtual:bifocal-eval-dataset") return;
+        // Read the file directly because the raw asset loader treats # in checkout paths as a fragment.
+        const file = fileURLToPath(new URL("../../eval/dataset.jsonl", import.meta.url));
+        this.addWatchFile(file);
+        return "export default " + JSON.stringify(readFileSync(file, "utf8"));
+      },
+    },
     VitePWA({
       filename: "dashboard-sw.js",
       injectRegister: "script-defer",

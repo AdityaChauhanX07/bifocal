@@ -63,3 +63,12 @@ textarea { width: 100%; border: 1px solid #8195a8; border-radius: .5rem; padding
   .try-workbench { grid-template-columns: 1fr; }
   .try-choices { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+.eval-width { width: min(100% - 2rem, 72rem); }
+.eval-grid { display: grid; gap: 1rem; margin-top: 1.5rem; }
+.eval-option { display: flex; align-items: flex-start; gap: .75rem; min-height: 2.75rem; padding: .4rem 0; }
+.eval-option input { margin-top: .38rem; width: 1.2rem; height: 1.2rem; accent-color: #14546d; }
+.eval-table-wrap { overflow-x: auto; }
+.eval-table { border-collapse: collapse; text-align: left; width: 100%; font-size: .95rem; }
+.eval-table th, .eval-table td { border-bottom: 1px solid #dce4ec; padding: .65rem .55rem; }
+.eval-table td { white-space: nowrap; }
