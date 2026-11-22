@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+:root {
+  font: 18px/1.5 system-ui, sans-serif;
+  color: #172b42;
+  background: #f2f5f8;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+main { max-width: 44rem; margin: 0 auto; padding: 1rem; }
+.brand { display: flex; gap: .55rem; align-items: center; font-size: 1.26rem; font-weight: 750; margin-bottom: 1.1rem; }
+.lenses { display: inline-flex; width: 1.8rem; }
+.lenses::before, .lenses::after { content: ""; width: .94rem; height: .89rem; border: 2px solid #176781; border-radius: 50%; }
+.lenses::after { margin-left: -.12rem; background: #ddf3f7; }
+.card { padding: 1rem; background: #fff; border: 1px solid #d6dfe9; border-radius: .85rem; overflow-wrap: anywhere; }
+.card[data-tier] { border-top-width: 5px; border-top-color: #27745a; }
+.card[data-tier="suspicious"] { border-top-color: #ae6d11; }
+.card[data-tier="high"] { border-top-color: #aa3741; }
+h1 { margin: 0 0 .6rem; font-size: 1.4rem; line-height: 1.2; }
+p { margin: .6rem 0; }
+.method { font-size: .86rem; margin: 0 0 .75rem; color: #4b6275; }
+.next-step { font-weight: 700; }
+blockquote { margin: 1rem 0; padding: .55rem .85rem; border-left: 3px solid #8ba3b8; background: #f3f7fa; white-space: pre-wrap; }
+ul { margin: .8rem 0 0; padding-left: 1.25rem; list-style: disc; }
+li + li { margin-top: .45rem; }
+button, input { font: inherit; }
+button { cursor: pointer; min-height: 44px; padding: .45rem .7rem; border: 1px solid #8ba0b1; border-radius: .45rem; }
+button:disabled { cursor: default; opacity: .65; }
+button.primary { background: #12516b; color: #fff; border-color: #12516b; }
+summary { cursor: pointer; font-weight: 690; display: list-item; padding-block: .4rem; }
+h2 { font-size: 1.1rem; font-weight: 720; margin-top: 1rem; }
+pre { font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; background: #f4f7fa; border-radius: .4rem; padding: .75rem; }
+progress { display: block; margin-top: .6rem; width: 100%; }
+a { color: #12516b; text-decoration: underline; }
+a + a { margin-left: .45rem; }
+.card-actions { display: grid; justify-items: start; gap: .85rem; margin-top: 1rem; }
+.card-actions section, .contact { width: 100%; }
+.buttons { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .6rem; }
+.settings { margin-top: 1rem; }
+.model-text { white-space: pre-wrap; }
+.search-suggestions { display: block; border: 0; width: 100%; min-height: 9rem; margin-top: 1rem; }
+:focus-visible { outline: 3px solid #1883a3; outline-offset: 3px; }
