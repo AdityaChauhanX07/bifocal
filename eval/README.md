@@ -15,6 +15,8 @@ The scenarios draw on public fraud patterns documented by the FTC and FBI. [Phis
 
 ## Held-out runner
 
+[On-device benchmark and error analysis](results/on-device.md) from the first completed Gemini Nano run.
+
 Open `/eval` in the dashboard. Choose a path and select **Run selected paths**. Model outputs are scored against the labels on all 65 held-out rows. The page calls each model in its requested mode and keeps failed runs, malformed responses, and responses from the wrong source out of its accuracy and median-latency calculations. The valid row count shows coverage. The valid JSON column counts schema-valid results among responses from the requested source. Expand the look-alike alarms to see the individual examples and the warning signs the model reported.
 
 - **On-device.** Use the Chrome profile where Gemini Nano is already installed. The runner uses the original synthetic text.
