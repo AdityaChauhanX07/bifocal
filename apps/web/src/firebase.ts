@@ -3,6 +3,8 @@ import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-ch
 import { connectAuthEmulator, getAuth } from "firebase/auth";
 import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
 
+import { messagingSenderId, webConfig } from "./firebase-config";
+
 const env = import.meta.env;
 
 export function connectFirebase() {
@@ -14,16 +16,11 @@ export function connectFirebase() {
         projectId: "demo-bifocal",
         appId: "demo-bifocal-web",
       }
-    : {
-        apiKey: env.VITE_FIREBASE_API_KEY,
-        authDomain: env.VITE_FIREBASE_AUTH_DOMAIN,
-        projectId: env.VITE_FIREBASE_PROJECT_ID,
-        appId: env.VITE_FIREBASE_APP_ID,
-      };
+    : webConfig;
 
   if (Object.values(config).some((value) => !value)) return null;
 
-  const app = initializeApp(config);
+  const app = initializeApp({ ...config, ...(!local && messagingSenderId ? { messagingSenderId } : {}) });
   if (!local && env.VITE_FIREBASE_APP_CHECK_SITE_KEY) {
     initializeAppCheck(app, {
       provider: new ReCaptchaEnterpriseProvider(env.VITE_FIREBASE_APP_CHECK_SITE_KEY),
