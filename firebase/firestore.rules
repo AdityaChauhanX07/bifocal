@@ -56,11 +56,13 @@ service cloud.firestore {
     function validProfile(profile) {
       let circleId = profile.get('circleId', null);
       let fcmToken = profile.get('fcmToken', null);
+      let installation = profile.get('fcmInstallationId', null);
       return profile.keys().hasAll(['displayName', 'role', 'createdAt'])
-        && profile.keys().hasOnly(['displayName', 'role', 'createdAt', 'circleId', 'fcmToken'])
+        && profile.keys().hasOnly(['displayName', 'role', 'createdAt', 'circleId', 'fcmToken', 'fcmInstallationId'])
         && boundedText(profile.displayName, 100)
         && profile.role in ['protected', 'contact']
         && (fcmToken == null || boundedText(fcmToken, 4096))
+        && (installation == null || (installation is string && installation.matches('[c-f][A-Za-z0-9_-]{21}')))
         && (circleId == null
           || (boundedText(circleId, 128) && profileCircleMatches(circleId, profile.role)));
     }

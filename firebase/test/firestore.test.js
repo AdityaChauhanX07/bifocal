@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { after, before, beforeEach, test } from "node:test";
 import { assertFails, assertSucceeds, initializeTestEnvironment } from "@firebase/rules-unit-testing";
 import {
-  collection, doc, getDoc, getDocs, query, serverTimestamp,
+  collection, deleteField, doc, getDoc, getDocs, query, serverTimestamp,
   setDoc, setLogLevel, Timestamp, updateDoc, where, writeBatch,
 } from "firebase/firestore";
 import { screenSchema } from "../../packages/core/src/index.ts";
@@ -215,4 +215,19 @@ test("accepts a short note as the reply on its own", async () => {
   await assertSucceeds(updateDoc(doc(contact, requestPath), {
     status: "replied", replyNote: "Please wait while I call you.", repliedAt: serverTimestamp(),
   }));
+});
+
+test("keeps push installations private and only accepts Firebase installation IDs", async () => {
+  const contact = contactDb();
+  const owner = ownerDb();
+  const profile = doc(contact, "users/" + contactUid);
+  const fid = "c" + "1".repeat(21);
+
+  await assertSucceeds(setDoc(profile, {
+    displayName: "Demo contact", role: "contact", createdAt: serverTimestamp(), fcmInstallationId: fid,
+  }));
+  await assertFails(getDoc(doc(owner, "users/" + contactUid)));
+  await assertFails(updateDoc(doc(owner, "users/" + contactUid), { fcmInstallationId: "d" + "2".repeat(21) }));
+  await assertFails(updateDoc(profile, { fcmInstallationId: "not-an-installation" }));
+  await assertSucceeds(updateDoc(profile, { fcmInstallationId: deleteField() }));
 });
