@@ -5,3 +5,8 @@ export { redactText } from "./redaction.ts";
 export type { RedactionOptions } from "./redaction.ts";
 export { replyPresets, requestChannels, riskLabels } from "./contact.ts";
 export type { ContactReply, ContactRequest, ReplyPreset, RequestChannel } from "./contact.ts";
+export { messageLimit, prepareCloudPreview, screenApprovedPreview, screenPrivateText, screenSample } from "./screening-router.ts";
+export type { CloudPreview, ScreenMode, ScreenModel, ScreeningResult } from "./screening-router.ts";
+export { trySamples } from "./try-samples.ts";
+export type { TrySampleId } from "./try-samples.ts";
+export { deviceModelReady } from "./on-device.ts";
