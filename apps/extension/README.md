@@ -23,6 +23,11 @@ The unpacked build goes to `apps/extension/.output/chrome-mv3`. The ZIP goes in 
 
 Message text and risk cards live in Chrome's session storage until the page changes or the browser closes. Pause stores the last choice and its time in the same session. Website checks are opt-in and read visible page text on pages with supported signals. They exclude typed field values. This first version checks the top-level document. Embedded payment widgets and links that redirect away from the original destination can bypass a Pause trigger.
 
+## Verified in desktop Chrome
+
+- **Gmail.** Gemini Nano rated a fictional gift-card request **High risk**, quoted the request and flagged the secrecy instruction. Opening a separate fictional lunch email cleared the banner and showed **No obvious warning signs**.
+- **Pause on a website.** In Bifocal 0.1.1, Gemini Nano flagged a local gift-card test page. Clicking **Buy gift card** opened Pause, and the tester reached the simulated checkout after holding to continue. A separate Chromium fixture run verified that a short hold keeps Pause open and that checkout requires another click after the full hold.
+
 ## Enable signed-in features
 
 1. Load the unpacked extension and copy its ID from `chrome://extensions`. For a stable ID across machines, use the extension's **public** manifest key as `WXT_EXTENSION_KEY`. Never put its private signing key in `.env.local`.
