@@ -1,0 +1,12 @@
+{
+  "parameters": {
+    "prompt_version": { "defaultValue": { "useInAppDefault": true } },
+    "system_prompt": { "defaultValue": { "useInAppDefault": true } },
+    "cloud_model_screen": { "defaultValue": { "useInAppDefault": true } },
+    "cloud_model_deep": { "defaultValue": { "useInAppDefault": true } },
+    "pause_triggers": { "defaultValue": { "useInAppDefault": true } },
+    "remote_access_tools": { "defaultValue": { "useInAppDefault": true } },
+    "max_chars_on_device": { "defaultValue": { "useInAppDefault": true } },
+    "risky_page_signals": { "defaultValue": { "useInAppDefault": true } }
+  }
+}
