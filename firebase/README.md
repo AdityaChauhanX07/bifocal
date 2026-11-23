@@ -1,5 +1,7 @@
 # Firestore contract
 
+Trusted-contact profiles, circles, requests and replies require a verified email on the Firebase Auth token. Anonymous Auth is used by the fictional screening demo.
+
 The protected user's Firebase UID doubles as the circle ID. Create `circles/{protectedUid}` with `protectedUid`, a trimmed and lowercase `contactEmail`, `contactUid: null`, and `createdAt: serverTimestamp()`. The owner can correct the email while the invite is pending. The linked contact stays attached to that circle's history.
 
 After Google sign-in, find pending invites with both `where("contactEmail", "==", user.email.toLowerCase())` and `where("contactUid", "==", null)`. Set `contactUid` to the signed-in user's UID. The rules check the verified email in their Firebase Auth token. The contact can also save the name from that token to the circle as `contactName` for redaction. Query `where("contactUid", "==", user.uid)` to find circles the contact already joined.

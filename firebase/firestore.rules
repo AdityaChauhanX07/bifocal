@@ -1,22 +1,18 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() {
-      return request.auth != null;
-    }
-
     function hasVerifiedEmail() {
-      return signedIn()
+      return request.auth != null
         && request.auth.token.get('email_verified', false) == true
         && request.auth.token.get('email', null) is string;
     }
 
     function isOwner(circle) {
-      return signedIn() && circle.protectedUid == request.auth.uid;
+      return hasVerifiedEmail() && circle.protectedUid == request.auth.uid;
     }
 
     function isContact(circle) {
-      return signedIn() && circle.contactUid == request.auth.uid;
+      return hasVerifiedEmail() && circle.contactUid == request.auth.uid;
     }
 
     function isMember(circle) {
@@ -34,7 +30,7 @@ service cloud.firestore {
         && email.size() <= 254
         && email == email.lower()
         && email.matches('[^@\\s]+@[^@\\s]+[.][^@\\s]+')
-        && (!hasVerifiedEmail() || email != request.auth.token.email.lower());
+        && email != request.auth.token.email.lower();
     }
 
     function boundedText(value, maxLength) {
@@ -110,20 +106,20 @@ service cloud.firestore {
     }
 
     match /users/{uid} {
-      allow get: if signedIn() && uid == request.auth.uid;
-      allow create: if signedIn() && uid == request.auth.uid
+      allow get: if hasVerifiedEmail() && uid == request.auth.uid;
+      allow create: if hasVerifiedEmail() && uid == request.auth.uid
         && validProfile(request.resource.data) && request.resource.data.createdAt == request.time;
-      allow update: if signedIn() && uid == request.auth.uid
+      allow update: if hasVerifiedEmail() && uid == request.auth.uid
         && validProfile(request.resource.data)
         && request.resource.data.createdAt == resource.data.createdAt;
     }
 
     match /circles/{circleId} {
-      allow get: if (signedIn() && circleId == request.auth.uid)
+      allow get: if (hasVerifiedEmail() && circleId == request.auth.uid)
         || isContact(resource.data) || hasPendingInvite(resource.data);
       allow list: if isMember(resource.data) || hasPendingInvite(resource.data);
 
-      allow create: if signedIn() && circleId == request.auth.uid
+      allow create: if hasVerifiedEmail() && circleId == request.auth.uid
         && request.resource.data.keys().hasOnly(['protectedUid', 'contactEmail', 'contactUid', 'createdAt'])
         && request.resource.data.protectedUid == request.auth.uid
         && request.resource.data.contactUid == null

@@ -71,6 +71,20 @@ test("creates a single owner circle and permits correcting a pending email", asy
   await assertFails(updateDoc(doc(owner, circlePath), { protectedUid: contactUid }));
 });
 
+test("anonymous Auth for sample checks cannot create a circle or a profile", async () => {
+  const guestId = "sample-guest";
+  const guest = environment.authenticatedContext(guestId, {
+    firebase: { sign_in_provider: "anonymous" },
+  }).firestore();
+  const circle = doc(guest, "circles", guestId);
+  const profile = doc(guest, "users", guestId);
+
+  await assertFails(setDoc(circle, { ...invite(), protectedUid: guestId }));
+  await assertFails(setDoc(profile, { displayName: "Demo guest", role: "protected", createdAt: serverTimestamp() }));
+  await assertFails(getDoc(circle));
+  await assertFails(getDoc(profile));
+});
+
 test("finds only pending invitations to the user's verified email", async () => {
   await setDoc(doc(ownerDb(), circlePath), invite());
   const other = contactDb("other-owner", "other-owner@example.test");
