@@ -31,7 +31,7 @@ export default defineConfig(({ mode }) => ({
         name: "Bifocal",
         short_name: "Bifocal",
         description: "Read and reply to requests from someone you support.",
-        start_url: "/",
+        start_url: "/dashboard",
         scope: "/",
         display: "standalone",
         theme_color: "#f4f7fa",
@@ -48,10 +48,10 @@ export default defineConfig(({ mode }) => ({
         inlineWorkboxRuntime: true,
         skipWaiting: true,
         clientsClaim: true,
-        // Root navigation can fall back offline. Requests and sign-in stay on the network.
+        // Keep the reconnect screen available at both dashboard entry points.
         runtimeCaching: [{
           urlPattern: ({ request, url, sameOrigin }) =>
-            sameOrigin && request.mode === "navigate" && url.pathname === "/",
+            sameOrigin && request.mode === "navigate" && ["/", "/dashboard", "/dashboard/"].includes(url.pathname),
           handler: "NetworkOnly",
           options: { precacheFallback: { fallbackURL: "/offline.html" } },
         }],

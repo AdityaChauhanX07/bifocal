@@ -12,7 +12,8 @@ import { newRequestCount, pendingPaths } from "./new-requests";
 import { disablePush } from "./push";
 import { PushNotifications } from "./PushNotifications";
 import { InstallButton } from "./InstallButton";
-import { emulatorBuild } from "./firebase-config";
+import { emulatorBuild, judgeDemo } from "./firebase-config";
+import { JudgeHeader } from "./JudgeHeader";
 import { signInContact } from "./firebase";
 
 const dateTime = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
@@ -235,17 +236,18 @@ function Dashboard({ auth, db }: { auth: Auth; db: Firestore }) {
 export function App({ firebase }: { firebase: { auth: Auth; db: Firestore } | null }) {
   return (
     <>
-      <header className="site-header">
+      {judgeDemo ? <JudgeHeader page="dashboard" /> : <header className="site-header">
         <div className="page-width wordmark">
           <span className="lenses" aria-hidden="true" />
           Bifocal
           <a href="/try" className="meta underline">Try Bifocal</a>
           <InstallButton />
         </div>
-      </header>
-      <main className="page-width">
+      </header>}
+      <main className="page-width" id="main-content">
         {emulatorBuild && <p className="meta">Local Firebase emulators</p>}
         <h1>Help requests</h1>
+        {judgeDemo && firebase && <InstallButton />}
         {firebase ? <Dashboard {...firebase} /> : (
           <p role="alert">Dashboard setup is incomplete. Add the Firebase web app settings and rebuild.</p>
         )}

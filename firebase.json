@@ -4,7 +4,8 @@
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       { "source": "/try{,/**}", "destination": "/index.html" },
-      { "source": "/eval{,/**}", "destination": "/index.html" }
+      { "source": "/eval{,/**}", "destination": "/index.html" },
+      { "source": "/dashboard{,/**}", "destination": "/index.html" }
     ]
   },
   "firestore": {

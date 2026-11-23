@@ -18,6 +18,14 @@ Keep the Firebase project on Spark. With the dashboard SDK configuration and reC
 
 To verify the fallback, open `/try` in a fresh Chrome profile without a ready local model, choose a fictional example, and look for **Checked with Google Gemini**. Then paste a fictional message and choose **Check privately**. Expect an on-device or basic result. Run the two bulk cloud evaluation paths from a separately configured build.
 
+## Verify trusted contacts on Spark
+
+Use `npm run build -w @bifocal/extension -- --mode spark-contact` with the extension Firebase and Google OAuth settings in `apps/extension/.env.local`. Load `apps/extension/.output/chrome-mv3-spark-contact` in the sender's Chrome profile. The ordinary judge ZIP uses local checks.
+
+1. Open a fictional warning in the extension and sign in with the sender's Google account. Under **Ask my trusted contact**, save the contact's Google email.
+2. Open the hosted dashboard in a separate profile as the invited contact. Click **Sign in with Google** and expect **No requests yet** after the invitation links. [Trusted-contact dashboard](https://bifocal-buildhybridai2026.web.app/dashboard)
+3. Preview and send a request from the extension. Read the summary on the dashboard, send a preset reply, and reopen the original risk card to confirm the reply is still visible.
+
 ## Configure the signed-in build
 
 Set up Firebase Web Apps for the dashboard and the extension. Copy the public SDK configuration into each app’s `.env.local`. Run `npm run firebase:preflight` and check the rows for the features being deployed. [Web setup](../apps/web/README.md#build-for-firebase) · [Extension setup](../apps/extension/README.md#enable-signed-in-features)
