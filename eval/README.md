@@ -15,13 +15,13 @@ The scenarios draw on public fraud patterns documented by the FTC and FBI. [Phis
 
 ## Held-out runner
 
-[On-device benchmark and error analysis](results/on-device.md) from the first completed Gemini Nano run.
+See the [three-path comparison](results/cloud.md) and the [on-device error analysis](results/on-device.md).
 
 Open `/eval` in the dashboard. Choose a path and select **Run selected paths**. Model outputs are scored against the labels on all 65 held-out rows. Accuracy and median latency use results that passed validation and came from the requested source. The valid row count shows coverage. The valid screening column shows how many responses from the requested source passed both the schema and evidence checks. Expand failed rows to see why a check failed, or open the look-alike alarms to review the warning signs the model reported.
 
 - **On-device.** Use the Chrome profile where Gemini Nano is already installed. The runner uses the original synthetic text.
-- **Cloud, original text.** Use the Firebase anonymous sign-in and App Check configuration described in the [web app README](../apps/web/README.md#enable-hosted-cloud-checks). This comparison sends only the bundled fictional examples.
-- **Cloud, redacted text.** Uses the same cloud model after the shared redaction step. Each cloud path can make 65 requests and takes at least six and a half minutes at the project's 10-request-per-minute setting.
+- **Cloud, original text.** Use a non-judge build with Firebase anonymous sign-in and App Check on an authorized HTTPS origin. This comparison sends only the bundled fictional examples. [Firebase web setup](../apps/web/README.md#enable-hosted-cloud-checks)
+- **Cloud, redacted text.** Uses the same cloud model after the shared redaction step. The runner spaces cloud requests by at least 6.1 seconds. Allow at least six and a half minutes per path, plus time for Firebase quota backoffs.
 
 Stop a run to export partial results or resume from the first unchecked row. **Download CSV** writes attempted row IDs, labels, predictions, source, status, latency, and a `validation_issue` code where available. The CSV excludes raw responses, original message text, and quotes. Export before closing or reloading the page.
 

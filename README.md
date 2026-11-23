@@ -58,7 +58,7 @@ The private check keeps pasted text on the device. When the optional cloud check
 
 ## Held-out evaluation
 
-Gemini Nano returned valid screenings for 61 of 65 fictional messages. It flagged 29 of 31 scams with valid results and marked 1 of 30 legitimate messages with valid results as high risk. Median latency for valid rows was 2.70 seconds. Four screenings failed validation, and the two cloud paths still need a live run. [Results and error analysis](eval/results/on-device.md) · [Evaluation setup](eval/README.md) · [User-testing protocol](docs/user-testing.md)
+The held-out benchmark screened 65 fictional messages on-device and through Firebase AI Logic with both original and redacted text. Gemini Nano returned 61 valid screenings and flagged 29 of the 31 scams with valid results. Both cloud paths returned 65 valid screenings after retries and flagged all 32 scams. The original-text cloud run marked one legitimate message as high risk. The redacted run had zero false highs. [Results and error analysis](eval/results/cloud.md) · [Evaluation setup](eval/README.md) · [User-testing protocol](docs/user-testing.md)
 
 ## Limits
 

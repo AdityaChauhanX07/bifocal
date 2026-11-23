@@ -1,6 +1,6 @@
 # Gemini Nano held-out results
 
-One run of `/eval` in desktop Chrome screened all 65 held-out fictional messages. The export reported `on-device` as the inference source for every row. The dataset contains 32 scams and 33 legitimate messages, including 20 legitimate hard look-alikes. Both cloud evaluation paths still need a live run. [Dataset](../dataset.jsonl) · [Runner used for this run](https://github.com/AdityaChauhanX07/bifocal/blob/4cff8f61933524e82fff0d9473a927eaa441eaff/apps/web/src/eval/runner.ts)
+One run of `/eval` in desktop Chrome screened all 65 held-out fictional messages. The export reported `on-device` as the inference source for every row. The dataset contains 32 scams and 33 legitimate messages, including 20 legitimate hard look-alikes. [Dataset](../dataset.jsonl) · [Three-path comparison](cloud.md) · [Runner used for this run](https://github.com/AdityaChauhanX07/bifocal/blob/4cff8f61933524e82fff0d9473a927eaa441eaff/apps/web/src/eval/runner.ts)
 
 | Metric | On-device result |
 | --- | ---: |
