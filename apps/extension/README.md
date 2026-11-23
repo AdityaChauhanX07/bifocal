@@ -17,7 +17,7 @@ The unpacked build goes to `apps/extension/.output/chrome-mv3`. The `bifocal-<ve
 ## Check the local flow
 
 1. Reload Gmail or Google Messages if it was open during installation. Open a fictional email or text asking the reader to buy a gift card and send the code.
-2. Open the Bifocal side panel and check the warning, quote and next step. The toolbar badge uses a basic check with the panel closed. The panel can upgrade the result using Gemini Nano. If needed, open **Settings** and choose **Get Bifocal ready** to download the model.
+2. Open the Bifocal side panel and check the warning, quote and next step. The toolbar badge uses a basic check with the panel closed. When the side panel offers **Get Bifocal ready**, choose it while online to start Chrome's one-time model download. When it finishes, Bifocal automatically rechecks the open message with Gemini Nano.
 3. For Pause on other sites, open `/try` and follow **Practice Pause with the Chrome extension**. In Bifocal’s **Settings**, choose **Enable website checks** and grant site access in Chrome. If already enabled, choose **Check this tab**. Once Bifocal reports that website checks are active, click **Buy gift card**. A short hold leaves the dialog open. After a five-second hold, the page lets the user retry the action themselves. [Judge walkthrough](../../docs/judge-demo.md)
 4. For an offline check, open your fictional message first and wait for Chrome to finish downloading the model. Disconnect, then open a different fictional message already loaded in the same tab. Look for **Checked privately on this computer**. **Basic check only** means the on-device model did not return a valid screening.
 
