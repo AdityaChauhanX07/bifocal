@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { prepareCloudPreview } from "@bifocal/core";
-import type { CloudPreview, ScreeningResult } from "@bifocal/core";
+import type { ScreeningResult } from "@bifocal/core";
 import type { User } from "firebase/auth/web-extension";
 import { TrustedContact } from "../../trusted-contact/TrustedContact";
-import { watchCircle } from "../../trusted-contact/store";
+import { watchCircle, type Circle } from "../../trusted-contact/store";
 import { approvedCloudEnabled, db } from "../../lib/firebase";
 import { privateAI } from "../../lib/private-model";
 import { checkApproved, explainWarning, searchApproved } from "../../lib/cloud-model";
@@ -22,8 +22,8 @@ interface Props {
 }
 
 export function CardActions({ card, tabId, check, user, online, openContact, onSignIn, onCloudResult }: Props) {
-  const [preview, setPreview] = useState<CloudPreview>();
-  const [contactEmail, setContactEmail] = useState<string>();
+  const [reviewing, setReviewing] = useState(false);
+  const [circle, setCircle] = useState<Circle | null>(null);
   const [grounded, setGrounded] = useState<Awaited<ReturnType<typeof searchApproved>>>();
   const [explanation, setExplanation] = useState<Awaited<ReturnType<typeof explainWarning>>>();
   const [busy, setBusy] = useState(false);
@@ -31,6 +31,11 @@ export function CardActions({ card, tabId, check, user, online, openContact, onS
   const contact = useRef<HTMLDetailsElement>(null);
   const active = useRef<AbortController | null>(null);
   const sentRequestId = card.request?.uid === user?.uid ? card.request?.id : undefined;
+  const preview = reviewing ? prepareCloudPreview(card.text, {
+    senderEmail: card.senderEmail,
+    profile: { name: user?.displayName ?? undefined, email: user?.email ?? undefined, phone: user?.phoneNumber ?? undefined },
+    trustedContact: { name: circle?.contactName, email: circle?.contactEmail },
+  }) : undefined;
 
   useEffect(() => () => active.current?.abort(), []);
   useEffect(() => {
@@ -44,16 +49,12 @@ export function CardActions({ card, tabId, check, user, online, openContact, onS
   }, [openContact]);
   useEffect(() => {
     if (!db || !user || !online || !approvedCloudEnabled) return;
-    return watchCircle(db, user.uid, (circle) => setContactEmail(circle?.contactEmail), () => undefined);
+    return watchCircle(db, user.uid, setCircle, () => undefined);
   }, [user, online]);
 
   function openPreview() {
     setError("");
-    setPreview(prepareCloudPreview(card.text, {
-      senderEmail: card.senderEmail,
-      profile: { name: user?.displayName ?? undefined, email: user?.email ?? undefined, phone: user?.phoneNumber ?? undefined },
-      trustedContact: { email: contactEmail },
-    }));
+    setReviewing(true);
   }
 
   async function run(operation: (signal: AbortSignal) => Promise<void>, message: string) {
@@ -86,7 +87,7 @@ export function CardActions({ card, tabId, check, user, online, openContact, onS
           onCloudResult(result);
         }
       }
-      if (!signal.aborted) setPreview(undefined);
+      if (!signal.aborted) setReviewing(false);
     }, search ? "Couldn’t get a search result with sources. Your earlier check is still here." : "Couldn’t complete the cloud check. Your earlier check is still here.");
   }
 
@@ -115,10 +116,11 @@ export function CardActions({ card, tabId, check, user, online, openContact, onS
           <h2>Review before sending</h2>
           <p>This goes to Google’s Gemini service. Check that the copy below leaves out anything you want to keep private.</p>
           <pre>{preview}</pre>
+          <p>Google excludes paid Gemini requests from product improvement and may keep them for a limited time to check for abuse. If you choose Send and search, Google stores the text and result for 30 days to support search.</p>
           <div className="buttons">
             <button type="button" className="primary" disabled={busy || !online} onClick={() => void send(false)}>Send this text</button>
             <button type="button" disabled={busy || !online} onClick={() => void send(true)}>Send and search</button>
-            <button type="button" disabled={busy} onClick={() => { setPreview(undefined); setError(""); }}>Cancel</button>
+            <button type="button" disabled={busy} onClick={() => { setReviewing(false); setError(""); }}>Cancel</button>
           </div>
         </section>
       ))}

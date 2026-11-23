@@ -119,6 +119,23 @@ test("only the invitee can claim their own UID and link their profile in a batch
   await assertFails(updateDoc(doc(owner, circlePath), { contactEmail: "new@example.test", contactUid: null }));
 });
 
+test("shares only the authenticated contact's name with the circle owner", async () => {
+  const owner = ownerDb();
+  const contactName = "Demo Contact";
+  const namedContact = environment.authenticatedContext(contactUid, {
+    email: inviteEmail, email_verified: true, name: contactName,
+  }).firestore();
+  const ref = doc(namedContact, circlePath);
+  await setDoc(doc(owner, circlePath), invite());
+  await assertFails(updateDoc(ref, { contactUid, contactName: "Other Person" }));
+  await assertSucceeds(updateDoc(ref, { contactUid, contactName }));
+  assert.equal((await getDoc(doc(owner, circlePath))).data().contactName, contactName);
+  await assertFails(updateDoc(doc(owner, circlePath), { contactName: "Other Person" }));
+  await assertFails(updateDoc(ref, { contactName: "Other Person" }));
+  await assertFails(updateDoc(ref, { contactName: deleteField() }));
+  await assertFails(updateDoc(ref, { contactName, contactEmail: "other@example.test" }));
+});
+
 test("keeps profiles and notification tokens private and checks claimed membership", async () => {
   const owner = ownerDb();
   const outsider = contactDb("outsider-fixture", "outside@example.test");

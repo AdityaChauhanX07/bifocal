@@ -25,7 +25,7 @@ export interface Inbox {
   requests: HelpRequest[];
 }
 
-function watchInvites(db: Firestore, user: User, onError: (error: unknown) => void): Unsubscribe {
+function watchInvites(db: Firestore, user: User, contactName: Promise<string | undefined>, onError: (error: unknown) => void): Unsubscribe {
   if (!user.emailVerified || !user.email) return () => {};
 
   const email = user.email.toLowerCase();
@@ -38,10 +38,11 @@ function watchInvites(db: Firestore, user: User, onError: (error: unknown) => vo
 
   async function claim(ref: DocumentReference) {
     try {
+      const name = await contactName;
       await runTransaction(db, async (transaction) => {
         const circle = (await transaction.get(ref)).data();
         if (circle?.contactUid === null && circle.contactEmail === email) {
-          transaction.update(ref, { contactUid: user.uid });
+          transaction.update(ref, { contactUid: user.uid, ...(name ? { contactName: name } : {}) });
         }
       });
     } catch (error) {
@@ -69,6 +70,11 @@ export function watchInbox(
 ): Unsubscribe {
   const circles = new Map<string, { stop: Unsubscribe; requests?: HelpRequest[] }>();
   const linked = query(collection(db, "circles"), where("contactUid", "==", user.uid));
+  const contactName = user.getIdTokenResult().then(({ claims }) => {
+    const name = claims.name;
+    return typeof name === "string" && name.length <= 100 && name.trim() ? name : undefined;
+  }).catch(() => undefined);
+  let stopped = false;
 
   function publish() {
     const current = [...circles.values()];
@@ -83,7 +89,7 @@ export function watchInbox(
     });
   }
 
-  const stopInvites = watchInvites(db, user, onError);
+  const stopInvites = watchInvites(db, user, contactName, onError);
   const stopCircles = onSnapshot(linked, { includeMetadataChanges: true }, (snapshot) => {
     if (snapshot.metadata.fromCache) return;
     for (const [id, circle] of circles) {
@@ -93,8 +99,13 @@ export function watchInbox(
       }
     }
 
-    for (const { id } of snapshot.docs) {
+    for (const entry of snapshot.docs) {
+      const { id } = entry;
       if (circles.has(id)) continue;
+      // Circles linked before names were saved pick up the name on the next dashboard visit.
+      void contactName.then((name) => {
+        if (!stopped && name && entry.data().contactName !== name) return updateDoc(entry.ref, { contactName: name });
+      }).catch(() => undefined);
       const recent = query(collection(db, "circles", id, "requests"), orderBy("createdAt", "desc"));
       const stop = onSnapshot(recent, { includeMetadataChanges: true }, (requests) => {
         if (requests.metadata.fromCache || requests.metadata.hasPendingWrites) return;
@@ -114,6 +125,7 @@ export function watchInbox(
   }, onError);
 
   return () => {
+    stopped = true;
     stopInvites();
     stopCircles();
     for (const circle of circles.values()) circle.stop();
