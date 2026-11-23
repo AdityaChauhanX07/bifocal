@@ -3,7 +3,7 @@ import { connectAuthEmulator, getAuth, GoogleAuthProvider, signInWithCredential,
 import { CustomProvider, initializeAppCheck } from "firebase/app-check";
 import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
 
-const env = import.meta.env;
+const env: Partial<ImportMetaEnv> = import.meta.env.WXT_BIFOCAL_JUDGE_DEMO === "true" ? {} : import.meta.env;
 export const emulatorMode = import.meta.env.MODE === "emulator";
 const config = {
   apiKey: env.WXT_FIREBASE_API_KEY as string | undefined,

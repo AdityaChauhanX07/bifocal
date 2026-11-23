@@ -1,5 +1,6 @@
 const env = import.meta.env;
 export const emulatorBuild = import.meta.env.MODE === "emulator";
+export const judgeDemo = env.VITE_BIFOCAL_JUDGE_DEMO === "true";
 
 export const webConfig = {
   apiKey: env.VITE_FIREBASE_API_KEY,

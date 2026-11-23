@@ -17,7 +17,8 @@ export default defineConfig({
   },
   manifest: ({ mode }) => {
     const emulator = mode === "emulator";
-    const clientId = emulator ? undefined : process.env.WXT_GOOGLE_CLIENT_ID;
+    const judge = process.env.WXT_BIFOCAL_JUDGE_DEMO === "true";
+    const clientId = emulator || judge ? undefined : process.env.WXT_GOOGLE_CLIENT_ID;
     return {
       name: emulator ? "Bifocal (Emulator)" : "Bifocal",
       description: "Spot warning signs in messages and pause before taking a risky action.",
@@ -30,7 +31,7 @@ export default defineConfig({
         content_security_policy: {
           extension_pages: "script-src 'self'; object-src 'self'; connect-src http://127.0.0.1:9099 http://127.0.0.1:8080;",
         },
-      } : { key: process.env.WXT_EXTENSION_KEY || releaseKey }),
+      } : { key: judge ? releaseKey : process.env.WXT_EXTENSION_KEY || releaseKey }),
       ...(clientId ? {
         oauth2: {
           client_id: clientId,
