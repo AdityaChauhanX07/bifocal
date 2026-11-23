@@ -23,7 +23,7 @@ npm run build -w "@bifocal/web"
 npx firebase-tools@15.37.0 emulators:start --only hosting --project demo-bifocal
 ```
 
-Open `http://127.0.0.1:5000/try` in desktop Chrome. Select a fictional example and click **Check sample**. To check your own text, choose **Paste a message** and **Check privately**. [Web app setup and cloud configuration](apps/web/README.md#try-bifocal)
+Open `http://127.0.0.1:5000/try` in desktop Chrome. Select a fictional example and click **Check sample**. To check your own text, choose **Paste a message** and **Check privately**. [Judge walkthrough](docs/judge-demo.md) · [Web app setup and cloud configuration](apps/web/README.md#try-bifocal)
 
 ## Privacy and App Check
 

@@ -98,6 +98,7 @@ export function TryPage() {
       <main className="page-width try-width">
         <h1 className="try-title">Check a message</h1>
         <p>Try a sample or paste a message to see what Bifocal flags.</p>
+        <a className="meta underline" href="/demo/checkout.html">Practice Pause with the Chrome extension</a>
         <div className="try-workbench">
           <aside className="empty-state">
             <h2>Sample messages</h2>
