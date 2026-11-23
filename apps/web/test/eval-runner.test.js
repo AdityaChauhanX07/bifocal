@@ -46,14 +46,15 @@ test("runs all three paths against the exact dataset and only redacts the redact
 });
 
 test("keeps request failures and wrong-source replies out of the accuracy denominators", async () => {
-  const first = { id: "fake-scam", text: "test scam", tier: "high" };
-  const second = { id: "fake-lookalike", text: "test notice", tier: "none", hard_lookalike: true };
-  const fixtures = [first, second, first, second, first];
+  const first = { id: "fake-scam", channel: "sms", text: "test scam", tier: "high", tactics: ["urgency"] };
+  const second = { id: "fake-lookalike", channel: "email", text: "test notice", tier: "none", tactics: [], hard_lookalike: true };
+  const fixtures = [first, second, first, second, first, second];
   const outcomes = [
     { source: "on-device", json: high },
     { source: "on-device", json: high },
     { source: "cloud", json: neutral },
-    { source: "on-device", json: "invalid" },
+    { source: "on-device", json: "invalid-raw-response" },
+    { source: "on-device", json: high.replace('"test"', '"invented quote"') },
   ];
   let index = 0;
   const rows = [];
@@ -63,7 +64,12 @@ test("keeps request failures and wrong-source replies out of the accuracy denomi
     return reply;
   }, { signal: new AbortController().signal, onRow: (row) => rows.push(row) });
 
-  assert.deepEqual(rows.map((row) => row.status), ["valid", "valid", "wrong_source", "invalid_response", "request_error"]);
+  assert.deepEqual(rows.map((row) => row.status), [
+    "valid", "valid", "wrong_source", "invalid_response", "invalid_response", "request_error",
+  ]);
+  assert.deepEqual(rows.map((row) => row.validationIssue), [
+    null, null, null, "invalid_json", "quote_not_in_message", null,
+  ]);
   const summary = summarize(rows);
   assert.equal(summary.scams, 1);
   assert.equal(summary.caught, 1);
@@ -71,8 +77,14 @@ test("keeps request failures and wrong-source replies out of the accuracy denomi
   assert.equal(summary.alarms[0].row.id, "fake-lookalike");
   assert.equal(summary.tierAgreement, 1);
   assert.equal(summary.valid, 2);
-  assert.equal(summary.returned, 3);
+  assert.equal(summary.returned, 4);
   assert.ok(summary.medianLatency >= 0);
+
+  const csv = toCsv(rows);
+  assert.match(csv, /status,latency_ms,validation_issue\r\n/);
+  assert.match(csv, /invalid_response,\d+\.\d,invalid_json\r\n/);
+  assert.match(csv, /invalid_response,\d+\.\d,quote_not_in_message\r\n/);
+  assert.doesNotMatch(csv, /invalid-raw-response|invented quote|test scam|test notice/);
 });
 
 test("stops before another model call when the run is canceled", async () => {

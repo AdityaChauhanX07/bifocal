@@ -69,15 +69,20 @@ function isTactic(value: unknown): value is Tactic {
   return hasKey(tacticDescriptions, value);
 }
 
-export function parseScreening(json: string, message: string): Screening | null {
+export type ScreeningIssue = "invalid_json" | "invalid_fields" | "unexpected_warning_details"
+  | "missing_tactics" | "missing_quote" | "quote_too_long" | "quote_not_in_message" | "no_action_for_warning";
+
+type ScreenValidation = { screening: Screening; issue: null } | { screening: null; issue: ScreeningIssue };
+
+export function validateScreening(json: string, message: string): ScreenValidation {
   let screening: unknown;
   try {
     screening = JSON.parse(json);
   } catch {
-    return null;
+    return { screening: null, issue: "invalid_json" };
   }
 
-  if (!screening || typeof screening !== "object") return null;
+  if (!screening || typeof screening !== "object") return { screening: null, issue: "invalid_fields" };
   const { tier, tactics, evidence_quote, next_step, confidence } =
     screening as Record<string, unknown>;
 
@@ -89,23 +94,25 @@ export function parseScreening(json: string, message: string): Screening | null 
     !hasKey(nextSteps, next_step) ||
     !isOneOf(confidenceLevels, confidence)
   ) {
-    return null;
+    return { screening: null, issue: "invalid_fields" };
   }
 
   if (tier === "none") {
-    if (tactics.length || evidence_quote !== "" || next_step !== "no_action") return null;
+    if (tactics.length || evidence_quote !== "" || next_step !== "no_action") {
+      return { screening: null, issue: "unexpected_warning_details" };
+    }
   } else {
     // The response schema cannot tell whether the quote came from the message.
-    if (
-      !tactics.length ||
-      !evidence_quote.trim() ||
-      [...evidence_quote].length > quoteLimit ||
-      !message.includes(evidence_quote) ||
-      next_step === "no_action"
-    ) {
-      return null;
-    }
+    if (!tactics.length) return { screening: null, issue: "missing_tactics" };
+    if (!evidence_quote.trim()) return { screening: null, issue: "missing_quote" };
+    if ([...evidence_quote].length > quoteLimit) return { screening: null, issue: "quote_too_long" };
+    if (!message.includes(evidence_quote)) return { screening: null, issue: "quote_not_in_message" };
+    if (next_step === "no_action") return { screening: null, issue: "no_action_for_warning" };
   }
 
-  return { tier, tactics, evidence_quote, next_step, confidence };
+  return { screening: { tier, tactics, evidence_quote, next_step, confidence }, issue: null };
+}
+
+export function parseScreening(json: string, message: string): Screening | null {
+  return validateScreening(json, message).screening;
 }
