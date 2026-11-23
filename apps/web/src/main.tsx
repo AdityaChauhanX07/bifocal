@@ -1,12 +1,13 @@
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { connectFirebase } from "./firebase";
+import { judgeDemo } from "./firebase-config";
 import "./style.css";
 
 const root = document.getElementById("root");
 if (root) {
   const app = createRoot(root);
-  if (location.pathname === "/try" || location.pathname === "/try/") {
+  if (location.pathname === "/try" || location.pathname === "/try/" || (judgeDemo && location.pathname === "/")) {
     document.title = "Check a message | Bifocal";
     void import("./try/TryPage").then(({ TryPage }) => app.render(<TryPage />));
   } else if (location.pathname === "/eval" || location.pathname === "/eval/") {

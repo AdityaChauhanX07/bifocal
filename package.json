@@ -7,6 +7,7 @@
     "packages/*"
   ],
   "scripts": {
+    "build:judge-demo": "node tools/build-judge-demo.mjs",
     "firebase:preflight": "node tools/firebase-preflight.mjs",
     "test": "npm test --workspaces --if-present && node --test apps/extension/adapters/*.test.ts apps/extension/trusted-contact/*.test.ts",
     "test:trusted-contact": "node --test apps/extension/trusted-contact/firestore.emulator.ts",
