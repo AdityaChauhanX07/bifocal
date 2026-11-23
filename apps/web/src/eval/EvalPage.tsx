@@ -1,4 +1,5 @@
 import { deviceModelReady, riskLabels, tacticDescriptions } from "@bifocal/core";
+import type { ScreeningIssue } from "@bifocal/core";
 import { useEffect, useRef, useState } from "react";
 import { cloudScreeningEnabled, prepareCloudScreening, runModel } from "../screening-model";
 import { heldOut } from "./dataset";
@@ -9,10 +10,21 @@ function formatRate(count: number, total: number) {
   return total ? `${Math.round(count / total * 100)}% (${count}/${total})` : "—";
 }
 
+const validationMessages: Record<ScreeningIssue, string> = {
+  invalid_json: "The response couldn’t be parsed as JSON.",
+  invalid_fields: "A required field was missing or had an unsupported value.",
+  unexpected_warning_details: "A no-warning result included warning details or an action.",
+  missing_tactics: "The warning omitted its tactics.",
+  missing_quote: "The warning omitted an evidence quote.",
+  quote_too_long: "The evidence quote exceeded the length limit.",
+  quote_not_in_message: "The evidence quote didn’t match the checked text.",
+  no_action_for_warning: "The warning said no action was needed.",
+};
+
 function Results({ rows }: { rows: EvalRow[] }) {
   const paths = evalPaths.map(({ id, label }) => {
     const attempted = rows.filter((row) => row.path === id);
-    return { id, label, attempted: attempted.length, ...summarize(attempted) };
+    return { id, label, failed: attempted.filter(({ status }) => status !== "valid"), ...summarize(attempted) };
   });
   return (
     <section className="request-card grid gap-3" aria-labelledby="eval-results">
@@ -28,7 +40,7 @@ function Results({ rows }: { rows: EvalRow[] }) {
               <th scope="col">False high risk</th>
               <th scope="col">Look-alike alarms</th>
               <th scope="col">Tier agreement</th>
-              <th scope="col">Valid JSON</th>
+              <th scope="col">Valid screening</th>
               <th scope="col">Median latency</th>
             </tr>
           </thead>
@@ -48,9 +60,20 @@ function Results({ rows }: { rows: EvalRow[] }) {
           </tbody>
         </table>
       </div>
-      {paths.some((path) => path.attempted > path.valid) && (
-        <p className="meta">{rows.filter((row) => row.status !== "valid").length} rows had errors or invalid results. The CSV includes their statuses.</p>
-      )}
+      {paths.map((path) => !!path.failed.length && (
+        <details key={`${path.id}-failed`}>
+          <summary>{path.label} · {path.failed.length} failed {path.failed.length === 1 ? "row" : "rows"}</summary>
+          <ul className="grid gap-2 pl-4">
+            {path.failed.map(({ row, status, validationIssue }) => (
+              <li key={row.id}>
+                <strong>{row.id}</strong>{" · "}
+                {validationIssue ? validationMessages[validationIssue] : status === "wrong_source"
+                  ? "The model ran on a different inference path." : "The model request failed."}
+              </li>
+            ))}
+          </ul>
+        </details>
+      ))}
       {paths.map((path) => !!path.alarms.length && (
         <details key={path.id}>
           <summary>{path.label} · {path.alarms.length} look-alike alarms</summary>

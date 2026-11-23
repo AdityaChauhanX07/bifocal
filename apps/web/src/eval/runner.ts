@@ -1,5 +1,5 @@
-import { parseScreening, redactText } from "@bifocal/core";
-import type { ScreenMode, Screening, Tactic, Tier } from "@bifocal/core";
+import { redactText, validateScreening } from "@bifocal/core";
+import type { ScreenMode, Screening, ScreeningIssue, Tactic, Tier } from "@bifocal/core";
 
 export const evalPaths = [
   { id: "on-device", label: "On-device", detail: "Gemini Nano with the original synthetic text." },
@@ -27,6 +27,7 @@ export interface EvalRow {
   source: Source | null;
   screening: Screening | null;
   status: "valid" | "invalid_response" | "wrong_source" | "request_error";
+  validationIssue: ScreeningIssue | null;
   latencyMs: number;
 }
 
@@ -55,14 +56,17 @@ export async function runEvaluation(
     const started = performance.now();
     let source: Source | null = null;
     let screening: Screening | null = null;
+    let validationIssue: ScreeningIssue | null = null;
     let status: EvalRow["status"] = "request_error";
     try {
       const text = path === "cloud-redacted" ? redactText(row.text) : row.text;
       const reply = await run(mode, text, signal);
       source = reply.source;
       if (source === mode) {
-        screening = parseScreening(reply.json, text);
-        status = screening ? "valid" : "invalid_response";
+        const check = validateScreening(reply.json, text);
+        screening = check.screening;
+        validationIssue = check.issue;
+        status = check.issue ? "invalid_response" : "valid";
       } else {
         status = "wrong_source";
       }
@@ -70,7 +74,7 @@ export async function runEvaluation(
       signal.throwIfAborted();
     }
     signal.throwIfAborted();
-    onRow({ path, row, source, screening, status, latencyMs: performance.now() - started });
+    onRow({ path, row, source, screening, status, validationIssue, latencyMs: performance.now() - started });
   }
 }
 
@@ -102,11 +106,11 @@ export function summarize(rows: readonly EvalRow[]) {
 export function toCsv(rows: readonly EvalRow[]) {
   const columns = [
     "path", "id", "channel", "hard_lookalike", "expected_tier", "expected_tactics",
-    "predicted_tier", "predicted_tactics", "source", "status", "latency_ms",
+    "predicted_tier", "predicted_tactics", "source", "status", "latency_ms", "validation_issue",
   ];
-  const body = rows.map(({ path, row, screening, source, status, latencyMs }) => [
+  const body = rows.map(({ path, row, screening, source, status, latencyMs, validationIssue }) => [
     path, row.id, row.channel, row.hard_lookalike, row.tier, row.tactics.join("|"),
-    screening?.tier ?? "", screening?.tactics.join("|") ?? "", source ?? "", status, latencyMs.toFixed(1),
+    screening?.tier ?? "", screening?.tactics.join("|") ?? "", source ?? "", status, latencyMs.toFixed(1), validationIssue ?? "",
   ].join(","));
   return [columns.join(","), ...body].join("\r\n") + "\r\n";
 }
