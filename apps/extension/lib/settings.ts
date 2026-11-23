@@ -1,5 +1,6 @@
 import { messageLimit, systemPrompt } from "@bifocal/core";
-import { fetchAndActivate, getRemoteConfig, getString, isSupported } from "firebase/remote-config";
+import { ensureInitialized, fetchAndActivate, getRemoteConfig, getString, isSupported } from "firebase/remote-config";
+import type { RemoteConfig } from "firebase/remote-config";
 import { firebaseApp, liveFirebase } from "./firebase";
 import { defaultPageSettings, pageSettingsKey } from "./page-checks";
 
@@ -18,13 +19,7 @@ const defaults = {
 
 export const modelSettings = { ...defaults };
 
-export async function syncSettings() {
-  if (!liveFirebase || !firebaseApp || !await isSupported()) return;
-  const remote = getRemoteConfig(firebaseApp);
-  remote.defaultConfig = defaults;
-  remote.settings.fetchTimeoutMillis = 5_000;
-  if (navigator.onLine) await fetchAndActivate(remote).catch(() => undefined);
-
+async function applySettings(remote: RemoteConfig) {
   for (const key of ["cloud_model_screen", "cloud_model_deep"] as const) {
     const value = getString(remote, key);
     if (allowedModel.test(value)) modelSettings[key] = value;
@@ -44,4 +39,17 @@ export async function syncSettings() {
       signals: getString(remote, "risky_page_signals").split(",").filter((signal) => defaultPageSettings.signals.includes(signal)),
     },
   });
+}
+
+export async function syncSettings() {
+  if (!liveFirebase || !firebaseApp || !await isSupported()) return;
+  const remote = getRemoteConfig(firebaseApp);
+  remote.defaultConfig = defaults;
+  remote.settings.fetchTimeoutMillis = 5_000;
+  await ensureInitialized(remote);
+  await applySettings(remote);
+
+  if (navigator.onLine && await fetchAndActivate(remote).catch(() => false)) {
+    await applySettings(remote);
+  }
 }

@@ -77,7 +77,7 @@ export function Panel() {
   const online = useSyncExternalStore(onlineEvents, () => navigator.onLine);
 
   useEffect(() => auth ? onAuthStateChanged(auth, setUser) : undefined, []);
-  useEffect(() => { void syncSettings().catch(() => undefined); }, [online, user]);
+  useEffect(() => { void syncSettings().catch(() => undefined); }, [online]);
 
   async function signInOwner() {
     setSignInError("");
