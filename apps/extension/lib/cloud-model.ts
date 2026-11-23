@@ -2,6 +2,7 @@ import { deviceModelReady, screenApprovedPreview, screenSchema, tacticDescriptio
 import type { CloudPreview, Screening } from "@bifocal/core";
 import { getAI, getGenerativeModel, GoogleAIBackend, InferenceMode, InferenceSource, Schema } from "firebase/ai";
 import { approvedCloudEnabled, auth, firebaseApp, hasCloud } from "./firebase";
+import { prepareGrounding } from "./grounding";
 import { privateAI } from "./private-model";
 import { modelSettings } from "./settings";
 
@@ -61,11 +62,10 @@ export async function searchApproved(preview: CloudPreview, signal: AbortSignal)
     signal: AbortSignal.any([signal, AbortSignal.timeout(30_000)]),
   });
   if (response.inferenceSource !== InferenceSource.IN_CLOUD) throw new Error("Unexpected inference source");
-  const grounding = response.candidates?.[0]?.groundingMetadata;
-  if (!grounding?.searchEntryPoint?.renderedContent || !grounding.groundingChunks?.length) {
-    throw new Error("Search did not return sources");
-  }
-  return { text: response.text(), grounding };
+  const grounding = prepareGrounding(response.candidates?.[0]?.groundingMetadata);
+  const text = response.text().trim();
+  if (!text || !grounding) throw new Error("Search did not return usable sources");
+  return { text, grounding };
 }
 
 export async function explainWarning(screening: Pick<Screening, "tier" | "tactics">, signal: AbortSignal) {

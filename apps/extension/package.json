@@ -8,6 +8,7 @@
     "build": "node build.mjs build",
     "build:emulator": "node build.mjs build --mode emulator",
     "zip": "node build.mjs zip",
+    "test": "node --test lib/*.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
