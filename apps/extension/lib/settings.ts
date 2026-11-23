@@ -1,6 +1,6 @@
 import { messageLimit, systemPrompt } from "@bifocal/core";
 import { fetchAndActivate, getRemoteConfig, getString, isSupported } from "firebase/remote-config";
-import { firebaseApp } from "./firebase";
+import { firebaseApp, liveFirebase } from "./firebase";
 import { defaultPageSettings, pageSettingsKey } from "./page-checks";
 
 const allowedModel = /^gemini-[\w.-]{1,64}$/;
@@ -19,7 +19,7 @@ const defaults = {
 export const modelSettings = { ...defaults };
 
 export async function syncSettings() {
-  if (!firebaseApp || !await isSupported()) return;
+  if (!liveFirebase || !firebaseApp || !await isSupported()) return;
   const remote = getRemoteConfig(firebaseApp);
   remote.defaultConfig = defaults;
   remote.settings.fetchTimeoutMillis = 5_000;

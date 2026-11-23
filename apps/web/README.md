@@ -19,6 +19,8 @@ npm run dev -w @bifocal/web
 
 **Sign in with Google** opens the Authentication emulator's account picker. Use the same email that the invite's owner saved in `contactEmail`. Requests appear as soon as the app claims the invite and a request exists in that circle. The Firestore fields are documented in [the Firestore contract](../../firebase/README.md).
 
+Use the emulator build and preview commands for a checkout path containing `#` or to rehearse trusted contacts with the Chrome side panel. [Rehearsal setup](../extension/README.md#rehearse-trusted-contacts-locally)
+
 ## Build for Firebase
 
 Copy `.env.example` to `.env.local` in this directory and fill in the Firebase web app settings from **Project settings** → **General** → **Your apps**. To use App Check, register the web app with reCAPTCHA Enterprise in Firebase App Check and set `VITE_FIREBASE_APP_CHECK_SITE_KEY`. Add the served hostname under **Authentication** → **Settings** → **Authorized domains** if Firebase does not already list it.

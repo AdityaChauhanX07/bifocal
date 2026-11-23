@@ -5,7 +5,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     tailwindcss(),
@@ -22,7 +22,7 @@ export default defineConfig({
         return "export default " + JSON.stringify(readFileSync(file, "utf8"));
       },
     },
-    VitePWA({
+    mode !== "emulator" && VitePWA({
       filename: "dashboard-sw.js",
       injectRegister: "script-defer",
       registerType: "autoUpdate",
@@ -58,4 +58,4 @@ export default defineConfig({
       },
     }),
   ],
-});
+}));

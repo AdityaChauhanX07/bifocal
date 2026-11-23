@@ -1,12 +1,12 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { nextSteps, riskLabels, screenPrivateText, tacticDescriptions } from "@bifocal/core";
 import type { ScreeningResult } from "@bifocal/core";
-import { onAuthStateChanged, signOut } from "firebase/auth/web-extension";
+import { onAuthStateChanged } from "firebase/auth/web-extension";
 import type { User } from "firebase/auth/web-extension";
 import type { Card, ExtensionMessage } from "../../lib/card";
 import { cardKey, contactKey } from "../../lib/card";
 import { privateModel } from "../../lib/private-model";
-import { auth, signIn } from "../../lib/firebase";
+import { auth, emulatorMode, signIn, signOutAccount } from "../../lib/firebase";
 import { syncSettings } from "../../lib/settings";
 import { CardActions } from "./CardActions";
 import { Setup } from "./Setup";
@@ -79,12 +79,13 @@ export function Panel() {
   useEffect(() => auth ? onAuthStateChanged(auth, setUser) : undefined, []);
   useEffect(() => { void syncSettings().catch(() => undefined); }, [online, user]);
 
-  async function useGoogle() {
+  async function signInOwner() {
     setSignInError("");
     try {
       await signIn();
     } catch {
-      setSignInError("Couldn’t sign in with Google. Check your connection and try again.");
+      setSignInError(emulatorMode ? "Couldn’t sign in. Check that the local Auth emulator is running."
+        : "Couldn’t sign in with Google. Check your connection and try again.");
     }
   }
 
@@ -103,9 +104,10 @@ export function Panel() {
   return (
     <main>
       <header className="brand"><span aria-hidden="true" className="lenses" /> Bifocal</header>
+      {emulatorMode && <p className="method">Local Firebase emulators</p>}
       {card && tabId !== undefined ? (
         <RiskCard key={JSON.stringify([card.id, user?.uid])} card={card} tabId={tabId} user={user} online={online}
-          askContact={askContact} onSignIn={() => void useGoogle()} />
+          askContact={askContact} onSignIn={() => void signInOwner()} />
       ) : (
         <section className="card">
           <h1>Check a message</h1>
@@ -116,10 +118,11 @@ export function Panel() {
       {auth && <section className="card settings" aria-label="Account">
         {user ? (
           <><p>Signed in as {user.email}</p><button type="button" onClick={() => {
-            if (!auth) return;
-            void signOut(auth).then(() => chrome.identity.clearAllCachedAuthTokens()).catch(() => setSignInError("Couldn’t sign out. Try again."));
+            void signOutAccount().catch(() => setSignInError("Couldn’t sign out. Try again."));
           }}>Sign out</button></>
-        ) : <button type="button" disabled={!online} onClick={() => void useGoogle()}>Sign in with Google</button>}
+        ) : <button type="button" disabled={!online} onClick={() => void signInOwner()}>
+          {emulatorMode ? "Sign in as demo owner" : "Sign in with Google"}
+        </button>}
       </section>}
       <Setup tabId={tabId} onModelReady={() => setModelReady((version) => version + 1)} />
     </main>

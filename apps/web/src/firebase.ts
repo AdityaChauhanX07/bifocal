@@ -1,14 +1,15 @@
 import { initializeApp } from "firebase/app";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
-import { connectAuthEmulator, getAuth } from "firebase/auth";
+import { connectAuthEmulator, getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup } from "firebase/auth";
+import type { Auth } from "firebase/auth";
 import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
 
-import { messagingSenderId, webConfig } from "./firebase-config";
+import { emulatorBuild, messagingSenderId, webConfig } from "./firebase-config";
 
 const env = import.meta.env;
 
 export function connectFirebase() {
-  const local = env.DEV && env.VITE_FIREBASE_MODE !== "live";
+  const local = emulatorBuild || (env.DEV && env.VITE_FIREBASE_MODE !== "live");
   const config = local
     ? {
         apiKey: "demo-bifocal",
@@ -35,4 +36,12 @@ export function connectFirebase() {
     connectFirestoreEmulator(db, "127.0.0.1", 8080);
   }
   return { auth, db };
+}
+
+export function signInContact(auth: Auth) {
+  if (emulatorBuild) {
+    const fixture = { sub: "bifocal-local-contact", email: "contact@example.test", email_verified: true, name: "Demo contact" };
+    return signInWithCredential(auth, GoogleAuthProvider.credential(JSON.stringify(fixture)));
+  }
+  return signInWithPopup(auth, new GoogleAuthProvider());
 }

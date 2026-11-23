@@ -1,7 +1,7 @@
 import { replyPresets, requestChannels, riskLabels, tacticDescriptions } from "@bifocal/core";
 import type { ReplyPreset } from "@bifocal/core";
 import { FirebaseError } from "firebase/app";
-import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import type { Auth, User } from "firebase/auth";
 import type { Firestore } from "firebase/firestore";
 import { useEffect, useRef, useState } from "react";
@@ -12,6 +12,8 @@ import { newRequestCount, pendingPaths } from "./new-requests";
 import { disablePush } from "./push";
 import { PushNotifications } from "./PushNotifications";
 import { InstallButton } from "./InstallButton";
+import { emulatorBuild } from "./firebase-config";
+import { signInContact } from "./firebase";
 
 const dateTime = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
 
@@ -190,11 +192,13 @@ function Dashboard({ auth, db }: { auth: Auth; db: Firestore }) {
         await disablePush(db, user.uid);
         await signOut(auth);
       } else {
-        await signInWithPopup(auth, new GoogleAuthProvider());
+        await signInContact(auth);
       }
     } catch (err) {
       if (!(err instanceof FirebaseError) || err.code !== "auth/popup-closed-by-user") {
-        setError(user ? "Bifocal couldn’t sign you out. Try again." : "Google sign-in didn’t finish. Try again.");
+        setError(user ? "Bifocal couldn’t sign you out. Try again."
+          : emulatorBuild ? "Couldn’t sign in. Check that the local Auth emulator is running."
+          : "Google sign-in didn’t finish. Try again.");
       }
     } finally {
       setBusy(false);
@@ -216,9 +220,10 @@ function Dashboard({ auth, db }: { auth: Auth; db: Firestore }) {
         </>
       ) : (
         <section className="empty-state grid gap-4">
-          <p>Sign in with the Google account your family or friend invited to see their requests.</p>
+          <p>{emulatorBuild ? "Use the demo contact account to see requests from the emulator extension."
+            : "Sign in with the Google account your family or friend invited to see their requests."}</p>
           <button className="primary justify-self-start" onClick={changeSignIn} disabled={busy}>
-            {busy ? "Opening Google sign-in…" : "Sign in with Google"}
+            {busy ? "Signing in…" : emulatorBuild ? "Sign in as demo contact" : "Sign in with Google"}
           </button>
           {error && <p role="alert" className="error">{error}</p>}
         </section>
@@ -239,6 +244,7 @@ export function App({ firebase }: { firebase: { auth: Auth; db: Firestore } | nu
         </div>
       </header>
       <main className="page-width">
+        {emulatorBuild && <p className="meta">Local Firebase emulators</p>}
         <h1>Help requests</h1>
         {firebase ? <Dashboard {...firebase} /> : (
           <p role="alert">Dashboard setup is incomplete. Add the Firebase web app settings and rebuild.</p>
