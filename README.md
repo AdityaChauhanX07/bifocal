@@ -40,6 +40,8 @@ Chrome Enhanced Protection warns about dangerous sites, downloads and extensions
 
 The hosted demo includes fictional samples, a practice checkout, and the local-only Chrome ZIP. [Try Bifocal](https://bifocal-buildhybridai2026.web.app/try) · [Chrome ZIP](https://bifocal-buildhybridai2026.web.app/downloads/bifocal-chrome.zip)
 
+The gift-card sample returned **Checked with Google Gemini** in a fresh browser profile with Nano unavailable. The live request used anonymous Auth and reCAPTCHA Enterprise App Check on Spark. A separate pasted message used the basic local check.
+
 From the repository root with Node.js 24.12 or later, build the signed-out demo and serve it with the Firebase Hosting emulator. The build bundles the Chrome ZIP with the demo.
 
 ```sh
