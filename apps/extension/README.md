@@ -4,7 +4,7 @@ Use desktop Chrome 139 or later. Open `chrome://extensions`, turn on **Developer
 
 ## Build from source
 
-Use Node.js 24.12 or later. Build from a checkout whose path has no `#` characters. WXT uses Vite to discover entry points and a `#` in the path can break that step.
+Use Node.js 24.12 or later. If the checkout path contains `#`, the build installs the locked extension dependencies in a temporary workspace and copies the finished output back.
 
 ```sh
 npm ci
@@ -12,7 +12,7 @@ npm run build -w "@bifocal/extension"
 npm run zip -w "@bifocal/extension"
 ```
 
-The unpacked build goes to `apps/extension/.output/chrome-mv3`. The ZIP goes in the same `.output` directory. Extract the ZIP before selecting its folder in Chrome.
+The unpacked build goes to `apps/extension/.output/chrome-mv3`. The `bifocal-<version>-chrome.zip` goes in the same `.output` directory. The ZIP command also builds the unpacked extension. Extract the ZIP before selecting its folder in Chrome.
 
 ## Check the local flow
 
@@ -30,7 +30,7 @@ Message text and risk cards live in Chrome's session storage until the page chan
 
 ## Enable signed-in features
 
-1. Load the unpacked extension and copy its ID from `chrome://extensions`. For a stable ID across machines, use the extension's **public** manifest key as `WXT_EXTENSION_KEY`. Never put its private signing key in `.env.local`.
+1. Load the unpacked extension and check its ID at `chrome://extensions`. The release ZIP uses `pkbbjikifimobaddpajdcfckhmammbao` on every machine. Builds before 0.1.2 may appear as a separate extension. `WXT_EXTENSION_KEY` accepts a public manifest key when a build needs a different ID. [Chrome manifest key](https://developer.chrome.com/docs/extensions/reference/manifest/key)
 2. In Google Cloud Console, create a **Chrome Extension** OAuth client with that extension ID. Enable **Google** in Firebase Authentication and add `chrome-extension://<id>` to its authorized domains. If the OAuth consent screen is in testing, add both demo accounts as test users. [Firebase Chrome extension sign-in](https://firebase.google.com/docs/auth/web/chrome-extension) · [Chrome Identity](https://developer.chrome.com/docs/extensions/reference/api/identity)
 3. Copy `.env.example` to `.env.local` in `apps/extension`. Fill in the extension Firebase web app's SDK configuration and the OAuth client ID. Rebuild and reload the extension. A signed-in owner can invite a trusted contact by their Google email from a risk card. The contact opens the dashboard and signs in with that account to accept the invite.
 4. Deploy the App Check endpoint with the matching extension origin and app ID, then set `WXT_APP_CHECK_URL` to its HTTPS URL. Firestore rules and phone push have their own deployment steps. [Firebase functions setup](../../functions/README.md)
