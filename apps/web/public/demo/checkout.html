@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f4f7fa" />
+    <title>Gift card checkout · Bifocal demo</title>
+    <link rel="icon" type="image/png" href="/icon-192.png" />
+    <style>
+      :root { color: #172c43; background: #f4f7fa; font: 18px/1.55 "Aptos", "Segoe UI", system-ui, sans-serif; }
+      body { width: min(100% - 2rem, 38rem); margin: 0 auto; }
+      header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; padding: 1.25rem 0; }
+      header strong { font-size: 1.35rem; }
+      a { color: #14546d; }
+      main { background: #fff; border: 1px solid #dce4ec; border-radius: 1rem; padding: clamp(1rem, 5vw, 2rem); }
+      h1 { margin: 0 0 1rem; font-size: clamp(1.9rem, 6vw, 2.6rem); line-height: 1.12; }
+      p { margin: 0 0 1rem; }
+      .instructions { color: #41556a; }
+      button { min-height: 2.75rem; padding: .5rem .85rem; border: 0; border-radius: .55rem; background: #14546d; color: #fff; font: inherit; font-weight: 650; cursor: pointer; }
+      button:hover { background: #0c4157; }
+      :is(button, a):focus-visible { outline: 3px solid #307da0; outline-offset: 3px; }
+      #checkout-status { margin: 1rem 0 0; }
+      #checkout-status:empty { margin: 0; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <strong>Bifocal</strong>
+      <a href="/try">Back to message samples</a>
+    </header>
+    <p class="instructions">To practice Pause, open the Bifocal extension and enable website checks in Settings.</p>
+    <main>
+      <h1>Gift card checkout</h1>
+      <p>Buy a gift card now and send me the code. Don’t tell anyone.</p>
+      <p>This test page simulates a checkout and uses no payment information.</p>
+      <button type="button" id="buy">Buy gift card</button>
+      <p id="checkout-status" role="status"></p>
+    </main>
+    <script>
+      document.getElementById("buy").addEventListener("click", () => {
+        document.getElementById("checkout-status").textContent = "Test checkout reached.";
+      });
+    </script>
+  </body>
+</html>
