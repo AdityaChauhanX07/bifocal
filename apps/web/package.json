@@ -9,6 +9,8 @@
   "scripts": {
     "dev": "vite --host localhost",
     "build": "vite build && vite build --config vite.messaging.config.ts",
+    "build:emulator": "vite build --mode emulator --outDir .output/emulator",
+    "preview:emulator": "vite preview --mode emulator --outDir .output/emulator --host 127.0.0.1 --port 4174 --strictPort",
     "test": "node --test test/*.test.js",
     "typecheck": "tsc --noEmit"
   },

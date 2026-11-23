@@ -5,12 +5,12 @@ import type { GenerativeModel } from "firebase/ai";
 import { initializeApp } from "firebase/app";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
 import { browserSessionPersistence, initializeAuth, signInAnonymously } from "firebase/auth";
-import { webConfig } from "./firebase-config";
+import { emulatorBuild, webConfig } from "./firebase-config";
 
 const env = import.meta.env;
 const siteKey = env.VITE_FIREBASE_APP_CHECK_SITE_KEY;
 export const cloudScreeningEnabled = Boolean(
-  (env.PROD || env.VITE_FIREBASE_MODE === "live") && siteKey && Object.values(webConfig).every(Boolean),
+  !emulatorBuild && (env.PROD || env.VITE_FIREBASE_MODE === "live") && siteKey && Object.values(webConfig).every(Boolean),
 );
 
 type ModelRunner = (mode: ScreenMode, text: string, signal?: AbortSignal) => Promise<{

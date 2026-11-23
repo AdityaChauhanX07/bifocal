@@ -1,4 +1,5 @@
 const env = import.meta.env;
+export const emulatorBuild = import.meta.env.MODE === "emulator";
 
 export const webConfig = {
   apiKey: env.VITE_FIREBASE_API_KEY,
@@ -9,4 +10,4 @@ export const webConfig = {
 
 export const messagingSenderId = env.VITE_FIREBASE_MESSAGING_SENDER_ID;
 export const vapidKey = env.VITE_FIREBASE_VAPID_KEY;
-export const pushConfigured = env.PROD && Boolean(vapidKey && messagingSenderId);
+export const pushConfigured = !emulatorBuild && env.PROD && Boolean(vapidKey && messagingSenderId);

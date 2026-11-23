@@ -28,6 +28,28 @@ Message text and risk cards live in Chrome's session storage until the page chan
 - **Gmail.** Gemini Nano rated a fictional gift-card request **High risk**, quoted the request and flagged the secrecy instruction. Opening a separate fictional lunch email cleared the banner and showed **No obvious warning signs**.
 - **Pause on a website.** In Bifocal 0.1.1, Gemini Nano flagged a local gift-card test page. Clicking **Buy gift card** opened Pause, and the tester reached the simulated checkout after holding to continue. A separate Chromium fixture run verified that a short hold keeps Pause open and that checkout requires another click after the full hold.
 
+## Rehearse trusted contacts locally
+
+With Node.js 24.12+ and Java 21+, build the emulator extension and dashboard from the repository root.
+
+```sh
+npm run build:emulator -w @bifocal/extension
+npm run build:emulator -w @bifocal/web
+```
+
+Run the emulators and dashboard preview in separate terminals.
+
+```sh
+npx firebase-tools@15.37.0 emulators:start --only auth,firestore --project demo-bifocal
+npm run preview:emulator -w @bifocal/web
+```
+
+1. Load `apps/extension/.output/chrome-mv3-emulator` and open **Bifocal (Emulator)**. On a fictional risk card, sign in as the demo owner and invite `contact@example.test`.
+2. Open the dashboard preview at `http://127.0.0.1:4174/` and click **Sign in as demo contact**. The dashboard opens as `contact@example.test`.
+3. Preview and send a request from the risk card. Reply in the dashboard, then close and reopen the side panel on the same message. The request opens with the reply visible.
+
+The rehearsal uses the `demo-bifocal` project on loopback. Release artifacts use separate directories and the release Chrome ID. [Firebase Authentication emulator](https://firebase.google.com/docs/emulator-suite/connect_auth)
+
 ## Enable signed-in features
 
 1. Load the unpacked extension and check its ID at `chrome://extensions`. The release ZIP uses `pkbbjikifimobaddpajdcfckhmammbao` on every machine. Builds before 0.1.2 may appear as a separate extension. `WXT_EXTENSION_KEY` accepts a public manifest key when a build needs a different ID. [Chrome manifest key](https://developer.chrome.com/docs/extensions/reference/manifest/key)

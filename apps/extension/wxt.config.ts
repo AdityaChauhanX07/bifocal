@@ -15,19 +15,28 @@ export default defineConfig({
       manifest.host_permissions = manifest.host_permissions?.filter((origin: string) => !pageOrigins.includes(origin));
     },
   },
-  manifest: () => ({
-    name: "Bifocal",
-    description: "Spot warning signs in messages and pause before taking a risky action.",
-    minimum_chrome_version: "139",
-    permissions: ["sidePanel", "storage", "scripting", ...(process.env.WXT_GOOGLE_CLIENT_ID ? ["identity" as const] : [])],
-    optional_host_permissions: pageOrigins,
-    action: { default_title: "Open Bifocal" },
-    key: process.env.WXT_EXTENSION_KEY || releaseKey,
-    ...(process.env.WXT_GOOGLE_CLIENT_ID ? {
-      oauth2: {
-        client_id: process.env.WXT_GOOGLE_CLIENT_ID,
-        scopes: ["openid", "https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"],
-      },
-    } : {}),
-  }),
+  manifest: ({ mode }) => {
+    const emulator = mode === "emulator";
+    const clientId = emulator ? undefined : process.env.WXT_GOOGLE_CLIENT_ID;
+    return {
+      name: emulator ? "Bifocal (Emulator)" : "Bifocal",
+      description: "Spot warning signs in messages and pause before taking a risky action.",
+      minimum_chrome_version: "139",
+      permissions: ["sidePanel", "storage", "scripting", ...(clientId ? ["identity" as const] : [])],
+      optional_host_permissions: pageOrigins,
+      action: { default_title: emulator ? "Open Bifocal (Emulator)" : "Open Bifocal" },
+      ...(emulator ? {
+        host_permissions: ["http://127.0.0.1/*"],
+        content_security_policy: {
+          extension_pages: "script-src 'self'; object-src 'self'; connect-src http://127.0.0.1:9099 http://127.0.0.1:8080;",
+        },
+      } : { key: process.env.WXT_EXTENSION_KEY || releaseKey }),
+      ...(clientId ? {
+        oauth2: {
+          client_id: clientId,
+          scopes: ["openid", "https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"],
+        },
+      } : {}),
+    };
+  },
 });
