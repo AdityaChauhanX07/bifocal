@@ -4,6 +4,7 @@ import { join, resolve } from "node:path";
 
 const repo = resolve(import.meta.dirname, "..");
 const npm = process.env.npm_execpath;
+const sparkSamples = process.argv.includes("--spark-samples");
 if (!npm) throw new Error("Run npm run build:judge-demo.");
 
 function build(workspace, script, settings) {
@@ -21,11 +22,13 @@ build("@bifocal/extension", "zip", {
 });
 build("@bifocal/web", "build", {
   VITE_BIFOCAL_JUDGE_DEMO: "true",
-  VITE_FIREBASE_API_KEY: "",
-  VITE_FIREBASE_AUTH_DOMAIN: "",
-  VITE_FIREBASE_PROJECT_ID: "",
-  VITE_FIREBASE_APP_ID: "",
-  VITE_FIREBASE_APP_CHECK_SITE_KEY: "",
+  ...(!sparkSamples && {
+    VITE_FIREBASE_API_KEY: "",
+    VITE_FIREBASE_AUTH_DOMAIN: "",
+    VITE_FIREBASE_PROJECT_ID: "",
+    VITE_FIREBASE_APP_ID: "",
+    VITE_FIREBASE_APP_CHECK_SITE_KEY: "",
+  }),
   VITE_FIREBASE_MESSAGING_SENDER_ID: "",
   VITE_FIREBASE_VAPID_KEY: "",
   VITE_BIFOCAL_ENABLE_PASTED_CLOUD: "false",

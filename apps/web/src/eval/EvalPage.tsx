@@ -1,10 +1,14 @@
 import { deviceModelReady, riskLabels, tacticDescriptions } from "@bifocal/core";
 import type { ScreeningIssue } from "@bifocal/core";
 import { useEffect, useRef, useState } from "react";
+import { JudgeHeader } from "../JudgeHeader";
+import { judgeDemo } from "../firebase-config";
 import { cloudScreeningEnabled, prepareCloudScreening, runModel } from "../screening-model";
 import { heldOut } from "./dataset";
 import { evalPaths, paceCloudRequests, runEvaluation, summarize, toCsv } from "./runner";
 import type { EvalPath, EvalRow } from "./runner";
+
+const cloudEvalEnabled = cloudScreeningEnabled && !judgeDemo;
 
 function formatRate(count: number, total: number) {
   return total ? `${Math.round(count / total * 100)}% (${count}/${total})` : "—";
@@ -137,7 +141,7 @@ export function EvalPage() {
             continue;
           }
         } else {
-          if (!cloudScreeningEnabled || !navigator.onLine) {
+          if (!cloudEvalEnabled || !navigator.onLine) {
             setError("Cloud evaluation needs an internet connection and the Firebase web setup.");
             continue;
           }
@@ -168,14 +172,14 @@ export function EvalPage() {
   const activePath = evalPaths.find(({ id }) => id === active);
   return (
     <>
-      <header className="site-header">
+      {judgeDemo ? <JudgeHeader page="eval" /> : <header className="site-header">
         <div className="page-width eval-width wordmark">
           <span className="lenses" aria-hidden="true" />
           Bifocal
           <a className="meta ml-auto underline" href="/try">Try Bifocal</a>
         </div>
-      </header>
-      <main className="page-width eval-width">
+      </header>}
+      <main className="page-width eval-width" id="main-content">
         <h1 className="try-title">Held-out evaluation</h1>
         <p>{heldOut.length} fictional messages across email, text, and web pages.</p>
         <div className="eval-grid">
@@ -185,7 +189,7 @@ export function EvalPage() {
               {evalPaths.map(({ id, label, detail }) => (
                 <label className="eval-option" key={id}>
                   <input type="checkbox" checked={selected.includes(id)}
-                    disabled={id !== "on-device" && !cloudScreeningEnabled}
+                    disabled={id !== "on-device" && !cloudEvalEnabled}
                     onChange={(event) => {
                       const checked = event.target.checked;
                       setSelected((current) => checked ? [...current, id] : current.filter((path) => path !== id));
@@ -198,9 +202,9 @@ export function EvalPage() {
               ))}
             </fieldset>
             <p className="meta">
-              {cloudScreeningEnabled
+              {cloudEvalEnabled
                 ? "Each cloud path can make 65 Gemini requests. The page spaces them out to respect the rate limit."
-                : "Cloud paths are available with Firebase anonymous sign-in and App Check configured."}
+                : judgeDemo ? "This public evaluation runs on your device." : "Cloud paths are available with Firebase anonymous sign-in and App Check configured."}
             </p>
             <div className="flex flex-wrap gap-2">
               {active ? (

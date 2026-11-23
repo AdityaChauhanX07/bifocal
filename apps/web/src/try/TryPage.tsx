@@ -5,6 +5,7 @@ import {
 import type { CloudPreview, ScreeningResult, TrySampleId } from "@bifocal/core";
 import { useState } from "react";
 import { judgeDemo } from "../firebase-config";
+import { JudgeHeader } from "../JudgeHeader";
 import {
   pastedCloudEnabled, runScreening, sampleCloudEnabled,
 } from "./model";
@@ -56,6 +57,12 @@ export function TryPage() {
     setError("");
   }
 
+  function chooseSample(id: TrySampleId) {
+    setSampleId(id);
+    setPasting(false);
+    clearCheck();
+  }
+
   async function check() {
     const text = message.trim();
     if (running || (pasting && !text)) return;
@@ -86,35 +93,35 @@ export function TryPage() {
 
   return (
     <>
-      <header className="site-header">
+      {judgeDemo ? <JudgeHeader page="try" /> : <header className="site-header">
         <div className="page-width try-width wordmark">
           <span className="lenses" aria-hidden="true" />
           Bifocal
           <nav className="ml-auto flex flex-wrap gap-3" aria-label="Bifocal pages">
             <a className="meta underline" href="/eval">Evaluation</a>
-            {!judgeDemo && <a className="meta underline" href="/">Dashboard</a>}
+            <a className="meta underline" href="/">Dashboard</a>
           </nav>
         </div>
-      </header>
-      <main className="page-width try-width">
+      </header>}
+      <main className="page-width try-width" id="main-content">
         <h1 className="try-title">Check a message</h1>
         <p>Try a sample or paste a message to see what Bifocal flags.</p>
-        <div className="flex flex-wrap gap-x-4 gap-y-2">
-          {judgeDemo && <a className="meta underline" href="/downloads/bifocal-chrome.zip" download>Download Bifocal for Chrome</a>}
-          <a className="meta underline" href="/demo/checkout.html">Practice Pause with the Chrome extension</a>
-        </div>
+        <a className="meta underline" href="/demo/checkout.html">Practice Pause with the Chrome extension</a>
         <div className="try-workbench">
           <aside className="empty-state">
-            <h2>Sample messages</h2>
+            <h2 id="sample-messages">Sample messages</h2>
+            {judgeDemo && (
+              <select className="try-mobile-choices" aria-labelledby="sample-messages" disabled={!!running}
+                value={pasting ? "" : sampleId} onChange={(event) => chooseSample(event.target.value as TrySampleId)}>
+                {pasting && <option value="" disabled>Choose a sample</option>}
+                {trySamples.map((example) => <option key={example.id} value={example.id}>{example.label}</option>)}
+              </select>
+            )}
             <div className="try-choices grid gap-1.5">
               {trySamples.map((example) => (
                 <button className="try-sample" type="button" key={example.id} disabled={!!running}
                   aria-pressed={!pasting && sampleId === example.id}
-                  onClick={() => {
-                    setSampleId(example.id);
-                    setPasting(false);
-                    clearCheck();
-                  }}>
+                  onClick={() => chooseSample(example.id)}>
                   {example.label}
                 </button>
               ))}

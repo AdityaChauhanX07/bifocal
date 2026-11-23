@@ -12,6 +12,12 @@ From the repository root, run `npm ci`, `npm test`, `npm run typecheck`, and `np
 4. In Gmail, open a fictional email that says “Buy a gift card now and send me the code. Don’t tell anyone.” Then open an ordinary lunch message. Expect a warning on the first and no obvious warning signs on the second. For Google Messages for web, send the fictional request from a second demo device to the paired phone, then open the received text in the web conversation.
 5. Use **Get Bifocal ready** if Chrome needs the model. Load the fictional messages before disconnecting. Open a different loaded message while offline and look for **Checked privately on this computer**.
 
+## Test the no-cost cloud fallback
+
+Keep the Firebase project on Spark. With the dashboard SDK configuration and reCAPTCHA Enterprise App Check site key in `apps/web/.env.local`, enable the **Anonymous** provider in Firebase Authentication. Build with `npm run build:judge-demo -- --spark-samples` and serve on the dashboard's authorized HTTPS hostname. The fictional message samples can then fall back to Gemini 3.5 Flash-Lite when Nano is unavailable. Pasted messages use the on-device model or the basic check. The public evaluation page runs only the on-device path. [Firebase pricing](https://firebase.google.com/docs/ai-logic/pricing) · [Gemini model pricing](https://ai.google.dev/gemini-api/docs/pricing#gemini-3.5-flash-lite)
+
+To verify the fallback, open `/try` in a fresh Chrome profile without a ready local model, choose a fictional example, and look for **Checked with Google Gemini**. Then paste a fictional message and choose **Check privately**. Expect an on-device or basic result. Run the two bulk cloud evaluation paths from a separately configured build.
+
 ## Configure the signed-in build
 
 Set up Firebase Web Apps for the dashboard and the extension. Copy the public SDK configuration into each app’s `.env.local`. Run `npm run firebase:preflight` and check the rows for the features being deployed. [Web setup](../apps/web/README.md#build-for-firebase) · [Extension setup](../apps/extension/README.md#enable-signed-in-features)
