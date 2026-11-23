@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { checkWebsiteTab, pageCheckScript, pageOrigins, registerPageChecks } from "../../lib/page-checks";
 
+export type ModelAvailability = "unavailable" | "downloadable" | "downloading" | "available";
+
 type PromptApi = {
-  availability(): Promise<string>;
+  availability(): Promise<ModelAvailability>;
   create(options: { monitor(monitor: EventTarget): void }): Promise<{ destroy(): void }>;
 };
 
@@ -15,15 +17,31 @@ const pageMessages = {
   unavailable: "Bifocal couldn’t start the check. Refresh the website tab and try again.",
 };
 
-export function Setup({ tabId, onModelReady }: { tabId?: number; onModelReady: () => void }) {
-  const [model, setModel] = useState<string>();
-  const [progress, setProgress] = useState<number>();
+export function Setup({ tabId, model, online, onModelChange }: {
+  tabId?: number;
+  model?: ModelAvailability;
+  online: boolean;
+  onModelChange: (availability: ModelAvailability) => void;
+}) {
+  const [progress, setProgress] = useState<number | null>();
+  const [downloadFailed, setDownloadFailed] = useState(false);
   const [pageChecks, setPageChecks] = useState(false);
   const [pagesBusy, setPagesBusy] = useState(false);
   const [pageStatus, setPageStatus] = useState<{ tabId?: number; text: string }>();
+  const downloading = progress !== undefined;
+  const canSetUp = model === "downloadable" || model === "downloading";
 
   useEffect(() => {
-    void promptApi?.availability().then(setModel, () => setModel("unavailable"));
+    let closed = false;
+    const report = (availability: ModelAvailability) => {
+      if (!closed) onModelChange(availability);
+    };
+    if (promptApi) void promptApi.availability().then(report, () => report("unavailable"));
+    else report("unavailable");
+    return () => { closed = true; };
+  }, [onModelChange]);
+
+  useEffect(() => {
     void chrome.scripting.getRegisteredContentScripts({ ids: [pageCheckScript] })
       .then((scripts) => setPageChecks(scripts.length > 0));
   }, []);
@@ -37,8 +55,9 @@ export function Setup({ tabId, onModelReady }: { tabId?: number; onModelReady: (
   }, [tabId]);
 
   async function download() {
-    if (!promptApi) return;
-    setProgress(0);
+    if (!promptApi || !online || downloading) return;
+    setProgress(null);
+    setDownloadFailed(false);
     try {
       const session = await promptApi.create({
         monitor(monitor) {
@@ -48,10 +67,9 @@ export function Setup({ tabId, onModelReady }: { tabId?: number; onModelReady: (
         },
       });
       session.destroy();
-      setModel("available");
-      onModelReady();
+      onModelChange("available");
     } catch {
-      setModel("failed");
+      setDownloadFailed(true);
     } finally {
       setProgress(undefined);
     }
@@ -92,20 +110,26 @@ export function Setup({ tabId, onModelReady }: { tabId?: number; onModelReady: (
     }
   }
 
-  return (
+  return <>
+    {canSetUp && (
+      <section className="card settings" aria-labelledby="private-setup">
+        <h2 id="private-setup">Set up private AI checks</h2>
+        <p>After a one-time Chrome download, Bifocal can use AI to check messages even when you’re offline.</p>
+        {!online && <p role="status">Connect to the internet to download. The basic check still works offline.</p>}
+        {downloading ? (
+          <progress aria-label="Chrome model download" value={progress ?? undefined} max="100" />
+        ) : (
+          <button className="primary" type="button" disabled={!online} onClick={() => void download()}>
+            {downloadFailed ? "Try download again" : "Get Bifocal ready"}
+          </button>
+        )}
+        {downloadFailed && online && <p role="status">Chrome couldn’t finish the download. You can try again.</p>}
+      </section>
+    )}
     <details className="card settings">
       <summary>Settings</summary>
-      <h2>Private checks</h2>
-      {model === "available" ? <p>This computer is ready for private AI checks.</p> : (
-        promptApi && model !== "unavailable" ? (
-          <>
-            <p>Chrome can download a model for private checks, including when you’re offline.</p>
-            <button type="button" disabled={progress !== undefined} onClick={() => void download()}>Get Bifocal ready</button>
-            {progress !== undefined && <progress aria-label="Model download" value={progress} max="100" />}
-            {model === "failed" && <p role="status">Chrome couldn’t finish setup. You can try again when you’re connected.</p>}
-          </>
-        ) : <p>This Chrome profile uses the basic check.</p>
-      )}
+      {model === "available" && <p>This computer is ready for private AI checks.</p>}
+      {model === "unavailable" && <p>This Chrome profile uses the basic check.</p>}
       <h2>Pause on websites</h2>
       <p>Allow site access to check pages with payment, sign-in, or download signals and pause at risky actions.</p>
       <div className="buttons">
@@ -116,5 +140,5 @@ export function Setup({ tabId, onModelReady }: { tabId?: number; onModelReady: (
       </div>
       {pageStatus && pageStatus.tabId === tabId && <p role="status">{pageStatus.text}</p>}
     </details>
-  );
+  </>;
 }

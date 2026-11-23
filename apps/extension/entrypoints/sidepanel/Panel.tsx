@@ -9,7 +9,7 @@ import { privateModel } from "../../lib/private-model";
 import { auth, emulatorMode, signIn, signOutAccount } from "../../lib/firebase";
 import { syncSettings } from "../../lib/settings";
 import { CardActions } from "./CardActions";
-import { Setup } from "./Setup";
+import { Setup, type ModelAvailability } from "./Setup";
 
 function onlineEvents(refresh: () => void) {
   window.addEventListener("online", refresh);
@@ -71,7 +71,7 @@ function useTabCard() {
 
 export function Panel() {
   const { tabId, card, askContact } = useTabCard();
-  const [modelReady, setModelReady] = useState(0);
+  const [model, setModel] = useState<ModelAvailability>();
   const [user, setUser] = useState<User | null>(null);
   const [signInError, setSignInError] = useState("");
   const online = useSyncExternalStore(onlineEvents, () => navigator.onLine);
@@ -90,16 +90,20 @@ export function Panel() {
   }
 
   useEffect(() => {
-    if (!card || tabId === undefined || (card.privateCheckFinished && (!modelReady || card.result.source === "on-device"))) return;
+    if (!card || tabId === undefined || !model || card.result.source === "on-device") return;
+    if (model !== "available" && card.privateCheckFinished) return;
     const controller = new AbortController();
-    void screenPrivateText(card.text, privateModel(controller.signal)).then((result) => {
+    const check = model === "available"
+      ? screenPrivateText(card.text, privateModel(controller.signal))
+      : Promise.resolve(card.result);
+    void check.then((result) => {
       if (controller.signal.aborted) return;
       return chrome.runtime.sendMessage({
         type: "private-result", tabId, cardId: card.id, result,
       } satisfies ExtensionMessage);
     }).catch(() => undefined);
     return () => controller.abort();
-  }, [card?.id, tabId, modelReady]);
+  }, [card?.id, tabId, model]);
 
   return (
     <main>
@@ -124,7 +128,7 @@ export function Panel() {
           {emulatorMode ? "Sign in as demo owner" : "Sign in with Google"}
         </button>}
       </section>}
-      <Setup tabId={tabId} onModelReady={() => setModelReady((version) => version + 1)} />
+      <Setup tabId={tabId} model={model} online={online} onModelChange={setModel} />
     </main>
   );
 }
