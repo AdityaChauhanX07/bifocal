@@ -30,8 +30,12 @@ export function CardActions({ card, tabId, check, user, online, openContact, onS
   const [error, setError] = useState("");
   const contact = useRef<HTMLDetailsElement>(null);
   const active = useRef<AbortController | null>(null);
+  const sentRequestId = card.request?.uid === user?.uid ? card.request?.id : undefined;
 
   useEffect(() => () => active.current?.abort(), []);
+  useEffect(() => {
+    if (sentRequestId && contact.current) contact.current.open = true;
+  }, [sentRequestId]);
   useEffect(() => {
     if (!openContact || !contact.current) return;
     contact.current.open = true;
@@ -126,7 +130,7 @@ export function CardActions({ card, tabId, check, user, online, openContact, onS
         {db ? (
           <TrustedContact db={db} user={user} onSignIn={onSignIn} ai={privateAI} cardId={card.id}
             screening={check.screening} message={card.text} channel={card.channel}
-            sentRequestId={card.request?.uid === user?.uid ? card.request?.id : undefined}
+            sentRequestId={sentRequestId}
             onRequestSent={(requestId) => {
               if (!user) return;
               void chrome.runtime.sendMessage({ type: "request-sent", tabId, cardId: card.id, requestId, uid: user.uid } satisfies ExtensionMessage)
