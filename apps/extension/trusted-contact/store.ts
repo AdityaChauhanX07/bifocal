@@ -5,6 +5,7 @@ import type { DocumentReference, Firestore, Unsubscribe } from "firebase/firesto
 export interface Circle {
   contactEmail: string;
   contactUid: string | null;
+  contactName?: string;
 }
 
 export function watchCircle(

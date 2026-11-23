@@ -41,6 +41,10 @@ service cloud.firestore {
       return value is string && value.size() > 0 && value.size() <= maxLength;
     }
 
+    function ownContactName(name) {
+      return boundedText(name, 100) && name == request.auth.token.get('name', null);
+    }
+
     function shortNote(value) {
       return boundedText(value, 280)
         && value.matches('(?s).*\\S.*')
@@ -133,8 +137,14 @@ service cloud.firestore {
         && normalizedInviteEmail(request.resource.data.contactEmail)
       ) || (
         hasPendingInvite(resource.data) && !isOwner(resource.data)
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['contactUid'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['contactUid', 'contactName'])
         && request.resource.data.contactUid == request.auth.uid
+        && (request.resource.data.get('contactName', null) == null
+          || ownContactName(request.resource.data.contactName))
+      ) || (
+        isContact(resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['contactName'])
+        && ownContactName(request.resource.data.get('contactName', null))
       );
 
       match /requests/{requestId} {

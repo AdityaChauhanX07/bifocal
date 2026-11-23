@@ -3,16 +3,17 @@ import test from "node:test";
 import { watchInbox, sendReply } from "../../web/src/requests.ts";
 import { deleteApp, initializeApp } from "firebase/app";
 import { connectAuthEmulator, getAuth, GoogleAuthProvider, signInWithCredential } from "firebase/auth";
-import { connectFirestoreEmulator, getDocFromServer, getFirestore } from "firebase/firestore";
+import { connectFirestoreEmulator, doc, getDocFromServer, getFirestore, updateDoc } from "firebase/firestore";
 import { requestRef, saveInvitation, sendRequest, watchCircle, watchReply } from "./store.ts";
 import { draftRequest } from "./summary.ts";
+import { prepareCloudPreview } from "@bifocal/core";
 
 const authHost = process.env.FIREBASE_AUTH_EMULATOR_HOST;
 const firestoreHost = process.env.FIRESTORE_EMULATOR_HOST;
 assert.ok(authHost && firestoreHost, "Start the Auth and Firestore emulators with project demo-bifocal.");
 const firestoreUrl = new URL("http://" + firestoreHost);
 
-async function account(sub: string, email: string) {
+async function account(sub: string, email: string, name?: string) {
   const app = initializeApp({ apiKey: "demo-bifocal", projectId: "demo-bifocal" }, sub);
   try {
     const auth = getAuth(app);
@@ -21,7 +22,7 @@ async function account(sub: string, email: string) {
     connectFirestoreEmulator(db, firestoreUrl.hostname, Number(firestoreUrl.port));
 
     const { user } = await signInWithCredential(auth, GoogleAuthProvider.credential(
-      JSON.stringify({ sub, email, email_verified: true }),
+      JSON.stringify({ sub, email, email_verified: true, name }),
     ));
     return { app, db, user };
   } catch (error) {
@@ -32,7 +33,7 @@ async function account(sub: string, email: string) {
 
 test("a dashboard contact claims the invitation, receives one request, and replies", { timeout: 20_000 }, async () => {
   const owner = await account("request-owner", "owner@example.test");
-  const contact = await account("request-contact", "contact@example.test");
+  const contact = await account("request-contact", "contact@example.test", "Demo Contact");
   const { db, user } = owner;
   const subscriptions: (() => void)[] = [];
 
@@ -43,17 +44,22 @@ test("a dashboard contact claims the invitation, receives one request, and repli
 
     await assert.rejects(sendRequest(request, draft), { code: "permission-denied" });
 
-    const linked = Promise.withResolvers<void>();
+    const linked = Promise.withResolvers<string>();
     const received = Promise.withResolvers<Parameters<typeof sendReply>[0]>();
     subscriptions.push(
       watchCircle(db, user.uid, (circle) => {
-        if (circle?.contactUid === contact.user.uid) linked.resolve();
+        if (circle?.contactUid === contact.user.uid && circle.contactName) linked.resolve(circle.contactName);
       }, () => linked.reject(new Error("Owner could not read the circle"))),
       watchInbox(contact.db, contact.user, ({ requests }) => {
         if (requests.length > 0) received.resolve(requests[0].ref);
       }, received.reject),
     );
-    await Promise.race([linked.promise, received.promise]);
+    const contactName = await Promise.race([linked.promise, received.promise]);
+    assert.equal(contactName, "Demo Contact");
+    const preview = prepareCloudPreview("Ask Demo Contact to buy a gift card.", {
+      trustedContact: { name: contactName },
+    });
+    assert.equal(preview, "Ask [CONTACT_NAME] to buy a gift card.");
     assert.equal((await getDocFromServer(request)).exists(), false);
     await Promise.all([sendRequest(request, draft), sendRequest(request, draft)]);
 
@@ -72,6 +78,29 @@ test("a dashboard contact claims the invitation, receives one request, and repli
     await sendRequest(request, draft);
     assert.equal((await getDocFromServer(request)).data()?.status, "replied");
 
+  } finally {
+    subscriptions.forEach((stop) => stop());
+    await Promise.all([deleteApp(owner.app), deleteApp(contact.app)]);
+  }
+});
+
+test("an already linked circle learns the contact name on the next dashboard visit", { timeout: 20_000 }, async () => {
+  const owner = await account("linked-owner", "linked-owner@example.test");
+  const contact = await account("linked-contact", "linked-contact@example.test", "Linked Contact");
+  const ready = Promise.withResolvers<string>();
+  const subscriptions: (() => void)[] = [];
+
+  try {
+    await saveInvitation(owner.db, owner.user.uid, contact.user.email!);
+    const circle = doc(contact.db, "circles", owner.user.uid);
+    await updateDoc(circle, { contactUid: contact.user.uid });
+    subscriptions.push(
+      watchCircle(owner.db, owner.user.uid, (current) => {
+        if (current?.contactName) ready.resolve(current.contactName);
+      }, () => ready.reject(new Error("Owner could not read the circle"))),
+      watchInbox(contact.db, contact.user, () => undefined, ready.reject),
+    );
+    assert.equal(await ready.promise, "Linked Contact");
   } finally {
     subscriptions.forEach((stop) => stop());
     await Promise.all([deleteApp(owner.app), deleteApp(contact.app)]);
