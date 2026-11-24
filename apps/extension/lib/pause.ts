@@ -1,6 +1,6 @@
 import type { CheckNotice, ExtensionMessage } from "./card";
-import { pauseReason, pauseReasons } from "./risky-page";
-import type { PauseReason } from "./risky-page";
+import { pauseReason, pauseReasons } from "./risky-page.ts";
+import type { PauseReason } from "./risky-page.ts";
 
 const holdMs = 5_000;
 
@@ -111,13 +111,15 @@ export function watchPause(
 ) {
   let notice: CheckNotice | null = null;
   let close: (() => void) | undefined;
-  let bypass: HTMLElement | undefined;
+  // One action the person held to continue. Only the same kind of event uses it up:
+  // clicking a button focuses it first, and that focusin must not spend a click's exception.
+  let bypass: { target: HTMLElement; type: string } | undefined;
 
   function intercept(event: Event) {
     if (close || !notice || (!notice.flagged && !notice.fromFlaggedLink) || !event.isTrusted) return;
     const target = event.composedPath().find((node) => node instanceof HTMLElement);
     if (!target) return;
-    if (target === bypass) { bypass = undefined; return; }
+    if (target === bypass?.target && event.type === bypass.type) { bypass = undefined; return; }
     const { triggers, tools } = settings();
     const reason = pauseReason(target, event.type === "focusin" ? "focus" : "click", tools);
     if (!reason || !triggers.includes(reason)) return;
@@ -134,7 +136,7 @@ export function watchPause(
       if (choice === "back") {
         if (history.length > 1) history.back();
       } else if (choice === "continue") {
-        bypass = target;
+        bypass = { target, type: event.type };
         if (event.type === "focusin") target.focus();
       }
     });
