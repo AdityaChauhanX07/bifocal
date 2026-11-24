@@ -1,5 +1,23 @@
 # Bifocal test report
 
+## Chrome 0.1.3 release retest
+
+November 24, 2026. The [public Chrome download](https://bifocal-buildhybridai2026.web.app/downloads/bifocal-chrome.zip) serves 0.1.3 from `36ea9f0`. The downloaded ZIP matched the build by SHA-256 (`5cc75d4bee3ab271221bec97d8176c7888c190610a6ce7f9158fac82aed0006c`). Hosting release `1795561349345000` changes only the ZIP asset. GitHub verified the signatures on the three release commits.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Pause after a full hold (ISS-06) | Pass | The shipped scripts ran on the hosted practice checkout in Chromium 153. A short hold left Pause open. A full hold permitted the next click to reach checkout. A later click opened Pause again. The test profile used a copy of the downloaded package with site access granted through its fixture manifest. Vlad's earlier real-Chrome retest also passed. |
+| Dashboard notice blocks Send note (ISS-05) | Pass in browser fixture | Website checks skipped `/dashboard` on both Bifocal Hosting domains. A mouse click reached the fixture's Send note handler with website checks enabled. A live two-account mouse retest remains open. |
+| Public and Spark builds look identical (ISS-01) | Fixed | The public build is **Bifocal**. The Spark package is **Bifocal (Trusted contacts)**. Both are version 0.1.3. |
+| Signed-out hosted demo | Pass | Both built-in samples returned the expected Gemini verdict through Firebase AI Logic with App Check. The pasted example used local rules. The dashboard sign-in page opened. Billing was disabled. |
+| Gmail extension | Pass in browser fixture | The exact downloaded ZIP flagged a fictional gift-card message and cleared the warning for a benign lunch message. With the test browser offline, it flagged a fresh fictional message using local rules. Live Gmail on 0.1.3 and offline Nano remain open. |
+| Google Messages extension | Pass in browser fixture | The exact downloaded ZIP ignored a fictional outgoing gift-card text and flagged the same text when it arrived as an incoming message. A paired-phone run remains open. |
+| Older-adult usability sessions | Pending | The original report records zero sessions. Use the [session guide](../docs/user-testing.md) to collect participant evidence. |
+
+The root test suite, typecheck, public ZIP build, and Spark build passed on Windows with Node 24.12.0. The four Pause regression tests and the dashboard route regression passed.
+
+## Vlad’s original run
+
 Date: 2026-11-24. Code under test: `f567d3f` (`fix/iss-06-pause-bypass`), one commit ahead of `main` (`dc49dde`).
 
 ## Summary
@@ -84,7 +102,7 @@ Nano misses its 100% valid-screening target. Counting its invalid scam response 
 | ISS-04: Spark ZIP untracked in repo root | Low | Open |
 | ISS-02: App Check 403 in automated Chrome | Info | Tooling only |
 
-## Next steps, in order
+## Next steps recorded in the original run
 
 1. Merge `fix/iss-06-pause-bypass`, rebuild and publish the PUBLIC ZIP, then rerun D1–D7 on it.
 2. Fix ISS-05, or keep Bifocal out of the contact's profile when recording.
