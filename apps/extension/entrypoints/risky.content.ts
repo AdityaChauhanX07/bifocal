@@ -1,5 +1,5 @@
 import { defineContentScript } from "wxt/utils/define-content-script";
-import { defaultPageSettings, pageOrigins, pageSettingsKey } from "../lib/page-checks";
+import { defaultPageSettings, pageOrigins, pageSettingsKey, skipsWebsiteCheck } from "../lib/page-checks";
 import type { ExtensionMessage } from "../lib/card";
 import { watchPause } from "../lib/pause";
 import { readRiskyPage } from "../lib/risky-page";
@@ -10,6 +10,7 @@ export default defineContentScript({
   matches: pageOrigins,
   registration: "runtime",
   main(ctx) {
+    if (skipsWebsiteCheck(new URL(location.href))) return;
     let settings = defaultPageSettings;
     let enabled = true;
     const updatePause = watchPause(ctx, () => enabled ? settings : { ...settings, triggers: [] });

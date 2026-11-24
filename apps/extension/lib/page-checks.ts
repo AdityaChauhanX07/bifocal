@@ -6,6 +6,10 @@ export const pageCheckScript = "bifocal-page-checks";
 
 const scriptFile = "content-scripts/risky.js";
 const messageSites = ["https://mail.google.com", "https://messages.google.com"];
+const dashboardSites = [
+  "https://bifocal-buildhybridai2026.web.app",
+  "https://bifocal-buildhybridai2026.firebaseapp.com",
+];
 
 export const defaultPageSettings = {
   triggers: ["card", "gift-card", "download"],
@@ -13,11 +17,19 @@ export const defaultPageSettings = {
   signals: ["payment", "login", "gift-card", "download"],
 };
 
+export function skipsWebsiteCheck(url: URL) {
+  return messageSites.includes(url.origin) ||
+    (dashboardSites.includes(url.origin) && url.pathname.startsWith("/dashboard"));
+}
+
 export function registerPageChecks() {
   return chrome.scripting.registerContentScripts([{
     id: pageCheckScript,
     matches: pageOrigins,
-    excludeMatches: messageSites.map((site) => `${site}/*`),
+    excludeMatches: [
+      ...messageSites.map((site) => `${site}/*`),
+      ...dashboardSites.map((site) => `${site}/dashboard*`),
+    ],
     js: [scriptFile],
     runAt: "document_idle",
   }]);
@@ -28,7 +40,7 @@ export async function checkWebsiteTab(tabId?: number) {
   const tab = await chrome.tabs.get(tabId);
   const url = URL.parse(tab.url ?? "");
   if (!url) return "access-needed";
-  if (!/^https?:$/.test(url.protocol) || messageSites.includes(url.origin)) return "choose-tab";
+  if (!/^https?:$/.test(url.protocol) || skipsWebsiteCheck(url)) return "choose-tab";
 
   async function ping(id: number) {
     const answer: unknown = await chrome.tabs.sendMessage(id, { type: "check-page" } satisfies ExtensionMessage, {
