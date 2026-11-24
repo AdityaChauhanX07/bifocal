@@ -19,13 +19,15 @@ export default defineConfig({
     const emulator = mode === "emulator";
     const judge = process.env.WXT_BIFOCAL_JUDGE_DEMO === "true";
     const clientId = emulator || judge ? undefined : process.env.WXT_GOOGLE_CLIENT_ID;
+    const name = emulator ? "Bifocal (Emulator)"
+      : mode === "spark-contact" && !judge ? "Bifocal (Trusted contacts)" : "Bifocal";
     return {
-      name: emulator ? "Bifocal (Emulator)" : "Bifocal",
+      name,
       description: "Spot warning signs in messages and pause before taking a risky action.",
       minimum_chrome_version: "139",
       permissions: ["sidePanel", "storage", "scripting", ...(clientId ? ["identity" as const] : [])],
       optional_host_permissions: pageOrigins,
-      action: { default_title: emulator ? "Open Bifocal (Emulator)" : "Open Bifocal" },
+      action: { default_title: `Open ${name}` },
       ...(emulator ? {
         host_permissions: ["http://127.0.0.1/*"],
         content_security_policy: {
