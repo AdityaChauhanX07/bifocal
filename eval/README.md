@@ -36,7 +36,7 @@ node --test packages/core/test/redaction-leaks.test.ts
 From the repository root, with Node.js 24.12 or newer, build and start the local Hosting emulator.
 
 ```powershell
-npm run build -w "@bifocal/web"
+npm run build:judge-demo
 npx firebase-tools@15.37.0 emulators:start --only hosting --project demo-bifocal
 ```
 

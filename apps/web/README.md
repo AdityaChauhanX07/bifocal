@@ -58,5 +58,7 @@ The `packages/core` screening router takes a fixed sample ID for hybrid checks. 
 
 1. In Firebase, open **Authentication** → **Sign-in method**, select **Anonymous**, turn on **Enable**, and save. The judge page opens a separate, anonymous session when a cloud-capable sample is checked. Trusted-contact sign-in keeps its own session.
 2. Register the dashboard web app with **App Check** using reCAPTCHA Enterprise. Fill in `VITE_FIREBASE_APP_CHECK_SITE_KEY` and the Firebase web app configuration in `.env.local`. The sample cloud checks are available in the production build with this setup.
-3. Pasted text defaults to private checks. After confirming that this Firebase project’s Gemini calls are covered by the paid-service data terms, set `VITE_BIFOCAL_ENABLE_PASTED_CLOUD=true` to offer the separately approved redacted check.
-4. Build and preview the site. Deploy the build with `npx firebase-tools@15.37.0 deploy --project hackathon --only hosting` when it is ready for judges. The Hosting configuration serves the page on a direct visit to `/try`.
+3. From the repository root, run `npm run build:judge-demo -- --spark-samples`. This builds the fictional-sample fallback, private pasted-text checks, and the Chrome ZIP together.
+4. Preview the build. Deploy it with `npx firebase-tools@15.37.0 deploy --project hackathon --only hosting` when it is ready for judges. The Hosting configuration serves `/try` on direct visits.
+
+A separate deployment can offer the consented redacted check. Confirm that the project’s Gemini calls are covered by the paid-service data terms, set `VITE_BIFOCAL_ENABLE_PASTED_CLOUD=true`, and use the standard web build.

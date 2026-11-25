@@ -19,7 +19,7 @@ Use the app with demo data throughout. If Pause or trusted-contact sharing is st
 If the local Hosting preview is running, open `http://127.0.0.1:5000/try`. To start it from the repo root, use Node.js 24.12 or newer and run:
 
 ```powershell
-npm run build -w "@bifocal/web"
+npm run build:judge-demo
 npx firebase-tools@15.37.0 emulators:start --only hosting --project demo-bifocal
 ```
 
