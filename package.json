@@ -16,5 +16,10 @@
   "devDependencies": {
     "jsdom": "27.4.0",
     "typescript": "6.0.3"
+  },
+  "overrides": {
+    "@firebase/firestore": {
+      "@grpc/grpc-js": "1.14.7"
+    }
   }
 }
